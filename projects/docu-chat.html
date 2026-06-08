@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>docu-chat — case study — Manish Karki</title>
+  <meta name="description" content="A retrieval-augmented chatbot over PDFs and markdown — what I built, what I broke, and what I'd do differently." />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="../index.html" class="brand" aria-label="Home">
+      <span class="brand-mark">M</span>
+      <span>manish<span class="slash">/</span>karki</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="../index.html">Home</a>
+      <a href="../about.html">About</a>
+      <a href="../projects.html" class="active">Projects</a>
+      <a href="../lab.html">Lab</a>
+      <a href="../contact.html">Contact</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="cmd-trigger" onclick="window.__openCmdk?.()" aria-label="Open command palette">
+        <span>Search</span><kbd>⌘K</kbd>
+      </button>
+      <button class="icon-btn theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <a href="../projects.html" class="proj-back"><span class="arrow">←</span> All projects</a>
+
+    <header class="proj-hero">
+      <div class="meta-row">
+        <span class="tag">RAG</span>
+        <span class="tag">LLM</span>
+        <span class="tag warm">Personal</span>
+      </div>
+      <h1>docu-chat</h1>
+      <p class="summary">A retrieval-augmented chatbot that answers questions over a folder of PDFs and markdown notes, with citations. I built it to learn the full RAG loop end-to-end and to stop being scared of it.</p>
+    </header>
+
+    <div class="proj-layout">
+      <article class="proj-prose">
+        <h2>Why I built it</h2>
+        <p>
+          By early 2025 I'd read maybe forty blog posts about retrieval-augmented
+          generation and watched three workshops, and I could still only describe
+          it in hand-waves. I decided I'd understand RAG the only way I've ever
+          properly understood anything: by building a small, useless version of
+          it from the ground up, and then making it slowly less useless.
+        </p>
+        <p>
+          The brief I gave myself was deliberately small. Ingest a folder of
+          PDFs and markdown. Let me ask questions in a chat UI. Always cite
+          which document each answer came from. If you can't ground the answer
+          in a source, say so. No agents, no tool use, no clever stuff —
+          just retrieval and generation done well.
+        </p>
+
+        <h2>The architecture</h2>
+        <p>
+          The shape ended up looking like every RAG diagram you've ever seen,
+          which I take as evidence I built it right.
+        </p>
+<pre><code>┌─────────┐    ┌───────────┐    ┌────────────┐    ┌──────────┐
+│  files  │ →  │ chunker   │ →  │ embeddings │ →  │  Chroma  │
+└─────────┘    └───────────┘    └────────────┘    └────┬─────┘
+                                                       │
+┌──────────┐    ┌─────────┐    ┌────────┐    ┌─────────▼────────┐
+│  user q  │ →  │ rewrite │ →  │ search │ ←  │ hybrid: bm25+vec │
+└──────────┘    └─────────┘    └───┬────┘    └──────────────────┘
+                                   │
+                            ┌──────▼──────┐    ┌──────────┐
+                            │   rerank    │ →  │   LLM    │ → cited answer
+                            └─────────────┘    └──────────┘
+</code></pre>
+        <p>
+          The interesting parts — the parts where it stopped being a tutorial and
+          started being a real system — were the three boxes in the middle:
+          chunking, hybrid search, and reranking.
+        </p>
+
+        <h2>Three things that broke, in order</h2>
+        <h3 style="font-family:var(--display);font-size:19px;margin-top:32px;">1. Chunking by tokens, not by meaning</h3>
+        <p>
+          My first version split documents into 512-token windows with 50-token
+          overlap. It looked fine in tests and produced absolute garbage in
+          practice. Half the retrieved chunks ended mid-sentence; the LLM would
+          dutifully complete the thought in whatever direction it pleased.
+        </p>
+        <div class="proj-callout">
+          <div class="ct-label">fix</div>
+          <p>Switched to a recursive splitter that prefers semantic boundaries —
+          paragraphs, then sentences, then tokens as a last resort. Quality
+          jumped immediately. The token-count constraint became a ceiling, not
+          a target.</p>
+        </div>
+
+        <h3 style="font-family:var(--display);font-size:19px;margin-top:32px;">2. Vector search alone misses exact-match queries</h3>
+        <p>
+          The query "what is the X-1.2 invoice cap" returned nothing useful from
+          pure vector search, because "X-1.2" embedded into roughly the same
+          space as every other product code. Lexical search would have nailed
+          this in milliseconds.
+        </p>
+        <div class="proj-callout">
+          <div class="ct-label">fix</div>
+          <p>Added BM25 as a parallel retriever, fused with reciprocal rank
+          fusion. Vector search still does the heavy lifting on conceptual
+          queries; BM25 catches exact identifiers and rare terms. Recall@5 went
+          from 0.71 to 0.89 on my eval set.</p>
+        </div>
+
+        <h3 style="font-family:var(--display);font-size:19px;margin-top:32px;">3. The top-1 chunk was rarely the best one</h3>
+        <p>
+          Retrieval would surface 20 plausible candidates, and the LLM would
+          confidently pick the wrong one if I just slammed them into the prompt
+          ordered by similarity. Reranking turned out to be the highest-leverage
+          change I made.
+        </p>
+        <div class="proj-callout">
+          <div class="ct-label">fix</div>
+          <p>Added a cross-encoder reranker (BGE-reranker-base) over the top-20
+          candidates and kept only the top-5 for the prompt. Answers got sharper
+          and the LLM stopped quietly mixing claims from different sources.</p>
+        </div>
+
+        <h2>What I'd do differently</h2>
+        <ul>
+          <li>Build the eval set <em>first</em>. I built it third. By then I'd already absorbed three rounds of vibes-based feedback that I couldn't undo.</li>
+          <li>Use a real document parser for PDFs from day one. PyPDF's output looked clean and was secretly full of header/footer noise that poisoned my chunks.</li>
+          <li>Track per-document recall, not just aggregate. One PDF in my corpus had a wonky structure and tanked the average; I almost rebuilt the whole pipeline before I caught it.</li>
+        </ul>
+
+        <h2>What it taught me</h2>
+        <p>
+          RAG is mostly an information retrieval problem with an LLM at the end,
+          not a prompting problem with a search engine at the start. The model
+          can only be as good as what you put in front of it. I came in thinking
+          the prompt was the hard part; I left convinced the chunker and the
+          reranker are.
+        </p>
+      </article>
+
+      <aside class="proj-side">
+        <div class="side-block">
+          <h4>Quick facts</h4>
+          <dl>
+            <div><dt>Year</dt><dd>2025</dd></div>
+            <div><dt>Status</dt><dd>Active</dd></div>
+            <div><dt>Role</dt><dd>Solo</dd></div>
+            <div><dt>Type</dt><dd>Personal</dd></div>
+          </dl>
+        </div>
+        <div class="side-block">
+          <h4>Stack</h4>
+          <dl>
+            <div><dt>Backend</dt><dd>FastAPI</dd></div>
+            <div><dt>RAG</dt><dd>LangChain</dd></div>
+            <div><dt>Vector DB</dt><dd>Chroma</dd></div>
+            <div><dt>Embeds</dt><dd>BGE-small-en</dd></div>
+            <div><dt>Rerank</dt><dd>BGE-reranker-base</dd></div>
+            <div><dt>LLM</dt><dd>GPT-4o-mini</dd></div>
+            <div><dt>UI</dt><dd>React</dd></div>
+          </dl>
+        </div>
+        <div class="side-block">
+          <h4>Links</h4>
+          <div class="side-links">
+            <a href="#"><span>Source code</span><span class="arrow">↗</span></a>
+            <a href="#"><span>Live demo</span><span class="arrow">↗</span></a>
+            <a href="#"><span>Write-up on blog</span><span class="arrow">↗</span></a>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <nav class="proj-next" aria-label="Project navigation">
+      <a href="kothi.html">
+        <span class="pn-label">← Previous</span>
+        <span class="pn-title">kothi — boutique hotel theme</span>
+      </a>
+      <a href="prompt-bench.html" class="pn-next">
+        <span class="pn-label">Next →</span>
+        <span class="pn-title">prompt-bench</span>
+      </a>
+    </nav>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>manish<span style="color:var(--accent)">/</span>karki</h4>
+        <p>Web developer turned AI engineer. Currently in Kathmandu, available worldwide.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Pages</h5>
+        <ul>
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Projects</a></li>
+          <li><a href="../lab.html">Lab</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Elsewhere</h5>
+        <ul>
+          <li><a href="https://github.com/manishkarki" target="_blank" rel="noopener">GitHub ↗</a></li>
+          <li><a href="https://linkedin.com/in/manishkarki" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+          <li><a href="https://x.com/manishkarki" target="_blank" rel="noopener">X / Twitter ↗</a></li>
+          <li><a href="mailto:hello@manishkarki.dev">Email</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Tools</h5>
+        <ul>
+          <li><a href="#" onclick="window.__openCmdk?.();return false;">Command palette ⌘K</a></li>
+          <li><a href="#" onclick="document.querySelector('.theme-toggle')?.click();return false;">Toggle theme</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Manish Karki. Built from scratch, no frameworks.</span>
+      <span>Crafted in Kathmandu · hosted on Cloudflare</span>
+    </div>
+  </footer>
+
+  <script>const ROOT = "../";</script>
+  <script src="../assets/js/app.js" defer></script>
+</body>
+</html>

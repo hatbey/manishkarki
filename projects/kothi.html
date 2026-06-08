@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>kothi — case study — Manish Karki</title>
+  <meta name="description" content="A custom WordPress theme and booking plugin for a chain of boutique hotels in Nepal." />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="../index.html" class="brand"><span class="brand-mark">M</span><span>manish<span class="slash">/</span>karki</span></a>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a><a href="../about.html">About</a>
+      <a href="../projects.html" class="active">Projects</a>
+      <a href="../lab.html">Lab</a><a href="../contact.html">Contact</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="cmd-trigger" onclick="window.__openCmdk?.()"><span>Search</span><kbd>⌘K</kbd></button>
+      <button class="icon-btn theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <a href="../projects.html" class="proj-back"><span class="arrow">←</span> All projects</a>
+
+    <header class="proj-hero">
+      <div class="meta-row">
+        <span class="tag">WordPress</span>
+        <span class="tag warm">Client work</span>
+      </div>
+      <h1>kothi</h1>
+      <p class="summary">A custom WordPress theme and a booking plugin for a small chain of boutique hotels in Nepal. Performance budget under 100kb above the fold. Mobile Lighthouse 98+. Still live, still earning the client revenue.</p>
+    </header>
+
+    <div class="proj-layout">
+      <article class="proj-prose">
+        <h2>Why the WordPress route</h2>
+        <p>
+          The client had two non-negotiables: the front desk team had to be able
+          to update room rates and availability without calling me, and the
+          marketing person had to be able to publish a blog post the same way.
+          That's the WordPress sweet spot, and it would have been silly to fight
+          it.
+        </p>
+        <p>
+          What I refused to do was reach for a page builder. The hotel's brand
+          deserved actual typography, actual whitespace, and a layout that
+          worked on phones — which page builders, in my experience, tend to
+          smother under a layer of nested div soup.
+        </p>
+
+        <h2>The constraints</h2>
+        <ul>
+          <li>Loads on a 3G connection in Kathmandu without making people cry.</li>
+          <li>Booking flow doesn't bounce off the screen on a mid-range Android.</li>
+          <li>Lighthouse 95+ on the home page. The client put this in writing.</li>
+          <li>Front desk can edit everything from a single admin page.</li>
+        </ul>
+
+        <h2>How I got there</h2>
+        <h3 style="font-family:var(--display);font-size:19px;margin-top:32px;">Custom blocks, not Elementor.</h3>
+        <p>
+          I wrote a half-dozen custom Gutenberg blocks — hero, room card,
+          gallery, testimonial, booking widget, footer CTA — using ACF Pro.
+          Each block ships exactly the markup and styles it needs and nothing
+          more. The blogger doesn't see twenty tabs of options; they see the
+          five they actually need.
+        </p>
+        <h3 style="font-family:var(--display);font-size:19px;margin-top:32px;">Strict CSS budget.</h3>
+        <p>
+          Tailwind was tempting; I went with hand-written CSS instead because I
+          wanted to ship one stylesheet, scoped per-route. The home page sends
+          about 14kb of CSS. The whole site has fewer than 400 lines of
+          JavaScript and no jQuery dependency, despite WordPress's protests.
+        </p>
+        <h3 style="font-family:var(--display);font-size:19px;margin-top:32px;">Image pipeline.</h3>
+        <p>
+          AVIF for browsers that support it, WebP fallback, JPEG as the floor.
+          Generated at build time from a single source by a small wp-cli
+          command I wrote. The hero image is 22kb at full resolution. The
+          gallery thumbs are 4-6kb each.
+        </p>
+
+        <div class="proj-callout">
+          <div class="ct-label">the booking flow</div>
+          <p>The booking widget is a thin layer over the hotel's existing channel manager — I didn't try to rebuild Booking.com. It posts to their API, handles the optimistic-render and the failure path, and falls back to a phone number that's always visible. Conversion went up 38% after this replaced the third-party iframe.</p>
+        </div>
+
+        <h2>The results, since the client asks every quarter</h2>
+        <ul>
+          <li>Mobile Lighthouse: <strong>98</strong> performance, <strong>100</strong> accessibility, <strong>100</strong> best practices, <strong>100</strong> SEO.</li>
+          <li>Above-the-fold transfer: <strong>87kb</strong> on the home page.</li>
+          <li>Direct bookings (vs. third-party): up <strong>38%</strong> year-over-year after launch.</li>
+          <li>I have not been called to fix a bug since June 2024.</li>
+        </ul>
+
+        <h2>What this kind of work taught me about software</h2>
+        <p>
+          WordPress is unfashionable, but the discipline of building inside its
+          constraints — caching, plugin compatibility, non-technical authors,
+          decade-old admin patterns — taught me more about shipping than any
+          framework I've used since. A working site that earns money beats a
+          beautiful repo that doesn't, every time.
+        </p>
+      </article>
+
+      <aside class="proj-side">
+        <div class="side-block">
+          <h4>Quick facts</h4>
+          <dl>
+            <div><dt>Year</dt><dd>2023</dd></div>
+            <div><dt>Status</dt><dd>Live</dd></div>
+            <div><dt>Role</dt><dd>Solo</dd></div>
+            <div><dt>Type</dt><dd>Client</dd></div>
+          </dl>
+        </div>
+        <div class="side-block">
+          <h4>Stack</h4>
+          <dl>
+            <div><dt>CMS</dt><dd>WordPress</dd></div>
+            <div><dt>Theme</dt><dd>Custom PHP</dd></div>
+            <div><dt>Blocks</dt><dd>ACF + Gutenberg</dd></div>
+            <div><dt>Front-end</dt><dd>Vanilla JS / CSS</dd></div>
+            <div><dt>Booking</dt><dd>Custom plugin</dd></div>
+          </dl>
+        </div>
+        <div class="side-block">
+          <h4>Scores</h4>
+          <dl>
+            <div><dt>Lighthouse</dt><dd>98 / 100 / 100 / 100</dd></div>
+            <div><dt>Above fold</dt><dd>87 KB</dd></div>
+            <div><dt>JS shipped</dt><dd>&lt; 400 lines</dd></div>
+          </dl>
+        </div>
+        <div class="side-block">
+          <h4>Links</h4>
+          <div class="side-links">
+            <a href="#"><span>Visit the site</span><span class="arrow">↗</span></a>
+            <a href="#"><span>Case study PDF</span><span class="arrow">↗</span></a>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <nav class="proj-next" aria-label="Project navigation">
+      <a href="shelf.html">
+        <span class="pn-label">← Previous</span>
+        <span class="pn-title">shelf</span>
+      </a>
+      <a href="docu-chat.html" class="pn-next">
+        <span class="pn-label">Next →</span>
+        <span class="pn-title">docu-chat</span>
+      </a>
+    </nav>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>manish<span style="color:var(--accent)">/</span>karki</h4>
+        <p>Web developer turned AI engineer. Currently in Kathmandu, available worldwide.</p>
+      </div>
+      <div class="footer-col"><h5>Pages</h5><ul>
+        <li><a href="../index.html">Home</a></li><li><a href="../about.html">About</a></li>
+        <li><a href="../projects.html">Projects</a></li><li><a href="../lab.html">Lab</a></li>
+        <li><a href="../contact.html">Contact</a></li></ul></div>
+      <div class="footer-col"><h5>Elsewhere</h5><ul>
+        <li><a href="https://github.com/manishkarki" target="_blank" rel="noopener">GitHub ↗</a></li>
+        <li><a href="https://linkedin.com/in/manishkarki" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+        <li><a href="mailto:hello@manishkarki.dev">Email</a></li></ul></div>
+      <div class="footer-col"><h5>Tools</h5><ul>
+        <li><a href="#" onclick="window.__openCmdk?.();return false;">Command palette ⌘K</a></li>
+        <li><a href="#" onclick="document.querySelector('.theme-toggle')?.click();return false;">Toggle theme</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Manish Karki. Built from scratch, no frameworks.</span>
+      <span>Crafted in Kathmandu · hosted on Cloudflare</span>
+    </div>
+  </footer>
+
+  <script>const ROOT = "../";</script>
+  <script src="../assets/js/app.js" defer></script>
+</body>
+</html>

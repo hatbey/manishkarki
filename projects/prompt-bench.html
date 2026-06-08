@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>prompt-bench — case study — Manish Karki</title>
+  <meta name="description" content="A tiny evaluation harness for LLM prompt variants — scoring accuracy, cost, and latency." />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="../index.html" class="brand"><span class="brand-mark">M</span><span>manish<span class="slash">/</span>karki</span></a>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../about.html">About</a>
+      <a href="../projects.html" class="active">Projects</a>
+      <a href="../lab.html">Lab</a>
+      <a href="../contact.html">Contact</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="cmd-trigger" onclick="window.__openCmdk?.()"><span>Search</span><kbd>⌘K</kbd></button>
+      <button class="icon-btn theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <a href="../projects.html" class="proj-back"><span class="arrow">←</span> All projects</a>
+
+    <header class="proj-hero">
+      <div class="meta-row">
+        <span class="tag">Eval</span>
+        <span class="tag">Tooling</span>
+        <span class="tag warm">Work</span>
+      </div>
+      <h1>prompt-bench</h1>
+      <p class="summary">A small evaluation harness for comparing prompt variants — it runs the same test set across every variant, scores them on accuracy, cost, and p95 latency, and writes a report I can paste into a Slack thread.</p>
+    </header>
+
+    <div class="proj-layout">
+      <article class="proj-prose">
+        <h2>The problem</h2>
+        <p>
+          At my internship, we kept ending up in arguments that went like this:
+          someone changed a system prompt, the answers <em>felt</em> better in a
+          handful of manual tests, and we shipped it. Two days later we'd notice
+          a regression on a different kind of input and have to roll back. Then
+          we'd argue about which version was actually better. We had no way to
+          tell.
+        </p>
+        <p>
+          What we needed was a fixed set of inputs and expected behaviours, and
+          a way to run any prompt variant across that set and compare results.
+          A test suite. For prompts. There are plenty of commercial tools that
+          do this. We didn't have budget for any of them, and I wanted to
+          understand the moving parts anyway.
+        </p>
+
+        <h2>What I built</h2>
+        <p>
+          Three pieces, each as small as I could get away with:
+        </p>
+        <ol>
+          <li>A <code>cases.yaml</code> file with inputs, expected outputs, and category tags.</li>
+          <li>A runner that takes a prompt template, fills it in, hits whatever model you configured, and grades the response.</li>
+          <li>A Streamlit page that diffs two runs side by side — per-case, per-category, and aggregate.</li>
+        </ol>
+        <p>
+          The grader is where the actual work is. For deterministic cases it's
+          a simple equality check or regex. For open-ended ones it's an
+          LLM-as-judge with a rubric, and I sample 10% of those for manual
+          review. The eval set itself is stored in version control so
+          reviewers can argue with the ground truth, not just the model.
+        </p>
+<pre><code># a case
+- id: refund_yes
+  input: |
+    Customer wrote: "I changed my mind, I want my money back."
+  expect:
+    intent: refund_request
+    sentiment: neutral
+  tags: [refund, easy]
+</code></pre>
+
+        <h2>What I learned from running it</h2>
+        <ul>
+          <li>The biggest accuracy wins came from changes I would never have made by gut feel. The clearest example: replacing "be concise" with "answer in at most two sentences" cost us 4 points of accuracy because the model started cutting off mid-reasoning. We'd never have caught that without the eval.</li>
+          <li>Cost matters more than I thought. One refactor saved 60% of input tokens with no accuracy loss — invisible until you put dollar signs next to each variant.</li>
+          <li>Per-category breakdowns saved us at least three times from shipping changes that improved aggregate score but tanked a specific kind of input.</li>
+        </ul>
+
+        <div class="proj-callout">
+          <div class="ct-label">what surprised me</div>
+          <p>Once we had numbers, the social dynamics of the team changed. Arguments about prompts stopped being arguments about taste and started being arguments about which case the model was failing on, and why. Much shorter, much more useful.</p>
+        </div>
+
+        <h2>What I'd do differently</h2>
+        <ul>
+          <li>Build versioning of prompts into the tool from day one. We bolted it on later and lost a week of comparisons we couldn't reconstruct.</li>
+          <li>Make the LLM-judge prompt itself part of the eval. We tweaked it once mid-stream and didn't realize for a week that some of our "improvements" were judge drift.</li>
+          <li>Track latency p95, not mean. Mean hides the long tail that actually breaks user trust.</li>
+        </ul>
+      </article>
+
+      <aside class="proj-side">
+        <div class="side-block">
+          <h4>Quick facts</h4>
+          <dl>
+            <div><dt>Year</dt><dd>2025</dd></div>
+            <div><dt>Status</dt><dd>In use</dd></div>
+            <div><dt>Role</dt><dd>Solo</dd></div>
+            <div><dt>Context</dt><dd>Internship</dd></div>
+          </dl>
+        </div>
+        <div class="side-block">
+          <h4>Stack</h4>
+          <dl>
+            <div><dt>Runner</dt><dd>Python + Pytest</dd></div>
+            <div><dt>Store</dt><dd>SQLite</dd></div>
+            <div><dt>UI</dt><dd>Streamlit</dd></div>
+            <div><dt>Models</dt><dd>OpenAI · Anthropic</dd></div>
+          </dl>
+        </div>
+        <div class="side-block">
+          <h4>Links</h4>
+          <div class="side-links">
+            <a href="#"><span>Source (internal)</span><span class="arrow">🔒</span></a>
+            <a href="#"><span>Write-up</span><span class="arrow">↗</span></a>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <nav class="proj-next" aria-label="Project navigation">
+      <a href="docu-chat.html">
+        <span class="pn-label">← Previous</span>
+        <span class="pn-title">docu-chat</span>
+      </a>
+      <a href="neural-from-scratch.html" class="pn-next">
+        <span class="pn-label">Next →</span>
+        <span class="pn-title">neural-from-scratch</span>
+      </a>
+    </nav>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>manish<span style="color:var(--accent)">/</span>karki</h4>
+        <p>Web developer turned AI engineer. Currently in Kathmandu, available worldwide.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Pages</h5>
+        <ul>
+          <li><a href="../index.html">Home</a></li><li><a href="../about.html">About</a></li>
+          <li><a href="../projects.html">Projects</a></li><li><a href="../lab.html">Lab</a></li>
+          <li><a href="../contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Elsewhere</h5>
+        <ul>
+          <li><a href="https://github.com/manishkarki" target="_blank" rel="noopener">GitHub ↗</a></li>
+          <li><a href="https://linkedin.com/in/manishkarki" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+          <li><a href="mailto:hello@manishkarki.dev">Email</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Tools</h5>
+        <ul>
+          <li><a href="#" onclick="window.__openCmdk?.();return false;">Command palette ⌘K</a></li>
+          <li><a href="#" onclick="document.querySelector('.theme-toggle')?.click();return false;">Toggle theme</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Manish Karki. Built from scratch, no frameworks.</span>
+      <span>Crafted in Kathmandu · hosted on Cloudflare</span>
+    </div>
+  </footer>
+
+  <script>const ROOT = "../";</script>
+  <script src="../assets/js/app.js" defer></script>
+</body>
+</html>

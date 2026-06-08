@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lab — Manish Karki</title>
+  <meta name="description" content="Three interactive AI demos: a chat playground, a tokenizer visualizer, and an embedding scatter plot. All running in your browser, no API key required." />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="index.html" class="brand" aria-label="Home">
+      <span class="brand-mark">M</span>
+      <span>manish<span class="slash">/</span>karki</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="lab.html" class="active">Lab</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="cmd-trigger" onclick="window.__openCmdk?.()" aria-label="Open command palette">
+        <span>Search</span><kbd>⌘K</kbd>
+      </button>
+      <button class="icon-btn theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <header class="page-hero">
+      <span class="eyebrow">/lab</span>
+      <h1>Small things,<br />running right here.</h1>
+      <p class="lede">Three interactive AI demos, all running in your browser. No API keys, no backend calls — these are tiny implementations of ideas I find interesting. Inspect the source if you'd like to see how they work.</p>
+    </header>
+
+    <section class="section" style="padding-top: 20px;">
+      <div class="lab-grid">
+
+        <!-- DEMO 1: chat -->
+        <div class="lab-card">
+          <div class="lc-head">
+            <h3>chat playground</h3>
+            <span class="tag">interactive</span>
+          </div>
+          <p class="lc-desc">A tiny chatbot whose answers come from a pattern-matched dictionary I wrote by hand — not a real LLM. Ask about RAG, evals, transformers, or my background. Streamed word-by-word to feel like the real thing.</p>
+
+          <div class="chat">
+            <div class="chat-log" id="chat-log"></div>
+            <div class="chat-suggestions">
+              <button class="chat-suggestion">How does RAG work?</button>
+              <button class="chat-suggestion">Why eval prompts?</button>
+              <button class="chat-suggestion">What's your stack?</button>
+              <button class="chat-suggestion">Are you hiring? I mean — are you for hire?</button>
+            </div>
+            <form class="chat-form" id="chat-form">
+              <input class="chat-input" id="chat-input" type="text" placeholder="Ask something…" autocomplete="off" />
+              <button class="chat-send" type="submit">Send</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- DEMO 2: tokenizer -->
+        <div class="lab-card">
+          <div class="lc-head">
+            <h3>tokenizer visualizer</h3>
+            <span class="tag">interactive</span>
+          </div>
+          <p class="lc-desc">A simplified BPE-style tokenizer that splits text into subword pieces. Watch the chunk count change as you type. Real tokenizers are more sophisticated; this is the idea at its smallest.</p>
+
+          <textarea class="tokenizer-input" id="tok-input" rows="3" placeholder="Type or paste some text…">The transformer's attention mechanism is mostly weighted averaging.</textarea>
+
+          <div class="tokenizer-output" id="tok-output"></div>
+
+          <div class="tokenizer-stats">
+            <span>tokens: <strong id="tok-count">0</strong></span>
+            <span>chars: <strong id="tok-chars">0</strong></span>
+            <span>chars/token: <strong id="tok-ratio">—</strong></span>
+          </div>
+        </div>
+
+        <!-- DEMO 3: embedding scatter -->
+        <div class="lab-card" style="grid-column: 1 / -1;">
+          <div class="lc-head">
+            <h3>embedding space</h3>
+            <span class="tag">interactive</span>
+          </div>
+          <p class="lc-desc">A toy projection of word embeddings into 2D — similar words cluster together. Hover any point to see the word. Real embeddings live in 768+ dimensions; this is what happens after dimensionality reduction tells you which words live near each other.</p>
+
+          <div class="embed-canvas" id="embed-canvas">
+            <div class="embed-tooltip" id="embed-tooltip"></div>
+          </div>
+          <p class="embed-hint">→ Animals cluster top-left, programming languages top-right, ML/AI terms centre-right, food bottom-left, cities bottom-right. Where would <em>manishkarki</em> land?</p>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="section" style="padding-bottom: 80px;">
+      <div class="section-head">
+        <div class="section-head-left">
+          <span class="section-num">/notes</span>
+          <h2>Why this page exists</h2>
+        </div>
+      </div>
+      <div class="about-prose" style="max-width: 760px;">
+        <p>
+          Most portfolio sites end at the projects page. I wanted somewhere I
+          could put small, working things — proof that I actually use the ideas
+          I list on my CV, not just collect them. Each demo here is a few
+          hundred lines of vanilla JavaScript, no frameworks, no external
+          calls. View source.
+        </p>
+        <p>
+          These are intentionally tiny. The chat replies from a hand-written
+          dictionary, the tokenizer is BPE-flavoured rather than BPE-proper,
+          and the embeddings are hand-positioned. The point isn't to ship
+          production AI in a static site — it's to show you that I understand
+          what the moving parts are, well enough to fit each one into a
+          single page.
+        </p>
+        <p>
+          More demos are on the way: a tiny attention-pattern visualizer, an
+          interactive prompt diff tool, a "next-token probability" toy. If
+          there's something you'd like to see, <a href="contact.html" style="color:var(--accent)">tell me</a>.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>manish<span style="color:var(--accent)">/</span>karki</h4>
+        <p>Web developer turned AI engineer. Currently in Kathmandu, available worldwide.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Pages</h5>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="lab.html">Lab</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Elsewhere</h5>
+        <ul>
+          <li><a href="https://github.com/manishkarki" target="_blank" rel="noopener">GitHub ↗</a></li>
+          <li><a href="https://linkedin.com/in/manishkarki" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+          <li><a href="https://x.com/manishkarki" target="_blank" rel="noopener">X / Twitter ↗</a></li>
+          <li><a href="mailto:hello@manishkarki.dev">Email</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Tools</h5>
+        <ul>
+          <li><a href="#" onclick="window.__openCmdk?.();return false;">Command palette ⌘K</a></li>
+          <li><a href="#" onclick="document.querySelector('.theme-toggle')?.click();return false;">Toggle theme</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Manish Karki. Built from scratch, no frameworks.</span>
+      <span>Crafted in Kathmandu · hosted on Cloudflare</span>
+    </div>
+  </footer>
+
+  <script>const ROOT = "";</script>
+  <script src="assets/js/app.js" defer></script>
+  <script src="assets/js/lab.js" defer></script>
+</body>
+</html>

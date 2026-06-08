@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>neural-from-scratch — case study — Manish Karki</title>
+  <meta name="description" content="Implementing a tiny neural network library in pure NumPy to demystify PyTorch." />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="../index.html" class="brand"><span class="brand-mark">M</span><span>manish<span class="slash">/</span>karki</span></a>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a><a href="../about.html">About</a>
+      <a href="../projects.html" class="active">Projects</a>
+      <a href="../lab.html">Lab</a><a href="../contact.html">Contact</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="cmd-trigger" onclick="window.__openCmdk?.()"><span>Search</span><kbd>⌘K</kbd></button>
+      <button class="icon-btn theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <a href="../projects.html" class="proj-back"><span class="arrow">←</span> All projects</a>
+
+    <header class="proj-hero">
+      <div class="meta-row">
+        <span class="tag">Learning</span>
+        <span class="tag warm">Personal</span>
+      </div>
+      <h1>neural-from-scratch</h1>
+      <p class="summary">A tiny neural network library in pure NumPy — autograd, layers, optimizers, and a working MNIST trainer that hits 97% test accuracy in fifty lines of training loop. I built it to stop being scared of PyTorch.</p>
+    </header>
+
+    <div class="proj-layout">
+      <article class="proj-prose">
+        <h2>Why bother</h2>
+        <p>
+          PyTorch is a beautiful piece of software, and that beauty is mostly
+          built on top of one trick: a computation graph that knows how to take
+          its own derivative. For a long time I knew this in the way you know
+          the capitals of countries you've never been to. I could write a
+          forward pass; I could call <code>loss.backward()</code>; I had no
+          mental picture of what was happening in between.
+        </p>
+        <p>
+          So I followed Karpathy's micrograd lecture and then went further than
+          I needed to. The result is <em>nfs</em> — neural-from-scratch — a
+          library small enough to fit in a single afternoon's reading, but
+          actually capable of training a real model.
+        </p>
+
+        <h2>What it does</h2>
+        <ul>
+          <li><strong>Tensor type</strong> with autograd: every operation records its parents and a backward function.</li>
+          <li><strong>Layers:</strong> Linear, ReLU, Sigmoid, Tanh, Softmax, Dropout, BatchNorm1D.</li>
+          <li><strong>Losses:</strong> MSE and cross-entropy with stable log-softmax.</li>
+          <li><strong>Optimizers:</strong> SGD, SGD+momentum, Adam.</li>
+          <li><strong>Training loop:</strong> mini-batching, shuffling, a simple LR scheduler.</li>
+          <li>~600 lines total, no dependencies beyond NumPy and matplotlib for plots.</li>
+        </ul>
+
+        <h2>The autograd, briefly</h2>
+        <p>Every tensor remembers its parents and how to send a gradient back to them:</p>
+<pre><code>class Tensor:
+    def __init__(self, data, _parents=(), _op=""):
+        self.data = np.asarray(data, dtype=np.float32)
+        self.grad = np.zeros_like(self.data)
+        self._parents = _parents
+        self._backward = lambda: None
+
+    def __add__(self, other):
+        out = Tensor(self.data + other.data, (self, other), "+")
+        def _back():
+            self.grad  += out.grad
+            other.grad += out.grad
+        out._backward = _back
+        return out
+
+    def backward(self):
+        # topo sort, then call _backward in reverse
+        ...
+        self.grad = np.ones_like(self.data)
+        for node in reversed(topo):
+            node._backward()
+</code></pre>
+        <p>
+          That's the whole trick. Every other op is the same pattern: do the
+          forward computation, register a closure that knows how to push the
+          gradient backward, return a new tensor that points at its parents.
+          Backward is a topological sort plus a loop. I had to write it three
+          times before I really believed it was that small.
+        </p>
+
+        <h2>What it taught me</h2>
+        <ul>
+          <li>Backprop isn't deep, it's just bookkeeping. The hard part is being careful with shapes and broadcasting; the calculus is high-school stuff.</li>
+          <li>Numerical stability is the actual hidden subject. My first softmax+cross-entropy implementation produced NaNs whenever a logit went above 20. Fixing it taught me more about floating point than four years of CS courses had.</li>
+          <li>Optimizers are smaller than they look. Adam is 12 lines. Knowing what β₁ and β₂ actually do changed how I read papers.</li>
+        </ul>
+
+        <div class="proj-callout">
+          <div class="ct-label">aha moment</div>
+          <p>The point where my <code>BatchNorm</code> implementation started training stably is the point I genuinely understood what BatchNorm does. Not from the paper, not from a blog post — from getting it wrong in a way that produced wildly diverging gradients and then fixing it.</p>
+        </div>
+
+        <h2>Result</h2>
+        <p>
+          MNIST in three Linear+ReLU layers, trained with Adam for 5 epochs,
+          batch size 128, lr 1e-3: <strong>97.1% test accuracy</strong>. Same
+          model in PyTorch, same hyperparameters: 97.3%. I'll take it.
+        </p>
+        <p>
+          More importantly, I now read PyTorch source code without flinching.
+          When something doesn't behave the way I expect, I have a real mental
+          model to check against. That was the whole point.
+        </p>
+      </article>
+
+      <aside class="proj-side">
+        <div class="side-block">
+          <h4>Quick facts</h4>
+          <dl>
+            <div><dt>Year</dt><dd>2025</dd></div>
+            <div><dt>Type</dt><dd>Learning</dd></div>
+            <div><dt>Lines</dt><dd>~600</dd></div>
+            <div><dt>Deps</dt><dd>NumPy only</dd></div>
+          </dl>
+        </div>
+        <div class="side-block">
+          <h4>Result</h4>
+          <dl>
+            <div><dt>MNIST acc</dt><dd>97.1%</dd></div>
+            <div><dt>vs PyTorch</dt><dd>-0.2%</dd></div>
+            <div><dt>Train time</dt><dd>~40s</dd></div>
+          </dl>
+        </div>
+        <div class="side-block">
+          <h4>Links</h4>
+          <div class="side-links">
+            <a href="#"><span>Source code</span><span class="arrow">↗</span></a>
+            <a href="#"><span>Notebook walkthrough</span><span class="arrow">↗</span></a>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <nav class="proj-next" aria-label="Project navigation">
+      <a href="prompt-bench.html">
+        <span class="pn-label">← Previous</span>
+        <span class="pn-title">prompt-bench</span>
+      </a>
+      <a href="shelf.html" class="pn-next">
+        <span class="pn-label">Next →</span>
+        <span class="pn-title">shelf</span>
+      </a>
+    </nav>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>manish<span style="color:var(--accent)">/</span>karki</h4>
+        <p>Web developer turned AI engineer. Currently in Kathmandu, available worldwide.</p>
+      </div>
+      <div class="footer-col"><h5>Pages</h5><ul>
+        <li><a href="../index.html">Home</a></li><li><a href="../about.html">About</a></li>
+        <li><a href="../projects.html">Projects</a></li><li><a href="../lab.html">Lab</a></li>
+        <li><a href="../contact.html">Contact</a></li></ul></div>
+      <div class="footer-col"><h5>Elsewhere</h5><ul>
+        <li><a href="https://github.com/manishkarki" target="_blank" rel="noopener">GitHub ↗</a></li>
+        <li><a href="https://linkedin.com/in/manishkarki" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+        <li><a href="mailto:hello@manishkarki.dev">Email</a></li></ul></div>
+      <div class="footer-col"><h5>Tools</h5><ul>
+        <li><a href="#" onclick="window.__openCmdk?.();return false;">Command palette ⌘K</a></li>
+        <li><a href="#" onclick="document.querySelector('.theme-toggle')?.click();return false;">Toggle theme</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Manish Karki. Built from scratch, no frameworks.</span>
+      <span>Crafted in Kathmandu · hosted on Cloudflare</span>
+    </div>
+  </footer>
+
+  <script>const ROOT = "../";</script>
+  <script src="../assets/js/app.js" defer></script>
+</body>
+</html>

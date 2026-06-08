@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Projects — Manish Karki</title>
+  <meta name="description" content="Selected work across AI, Python web apps, and WordPress." />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="index.html" class="brand" aria-label="Home">
+      <span class="brand-mark">M</span>
+      <span>manish<span class="slash">/</span>karki</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html" class="active">Projects</a>
+      <a href="lab.html">Lab</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="cmd-trigger" onclick="window.__openCmdk?.()" aria-label="Open command palette">
+        <span>Search</span><kbd>⌘K</kbd>
+      </button>
+      <button class="icon-btn theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <header class="page-hero">
+      <span class="eyebrow">/projects</span>
+      <h1>Things I've built<br />that I'm willing to show you.</h1>
+      <p class="lede">A mix of recent AI work, production Python web apps, and the WordPress sites that paid the rent. Each one has a case study with what worked, what didn't, and what I'd do differently.</p>
+    </header>
+
+    <div class="filter-bar">
+      <button class="filter-chip active" data-filter="all">All <span class="count">5</span></button>
+      <button class="filter-chip" data-filter="ai">AI / ML <span class="count">3</span></button>
+      <button class="filter-chip" data-filter="web">Python web <span class="count">1</span></button>
+      <button class="filter-chip" data-filter="wp">WordPress <span class="count">1</span></button>
+      <button class="filter-chip" data-filter="learning">Learning <span class="count">1</span></button>
+    </div>
+
+    <div class="projects-grid">
+      <a class="project-card" href="projects/docu-chat.html" data-tags="ai">
+        <span class="pc-year">2025 · RAG · LLM</span>
+        <h3>docu-chat</h3>
+        <p class="pc-summary">A grounded retrieval-augmented chatbot that answers questions over a folder of PDFs and markdown. Built end-to-end to learn the full RAG loop: ingestion, chunking, hybrid search, reranking, and citation enforcement.</p>
+        <ul class="pc-stack"><li>Python</li><li>FastAPI</li><li>LangChain</li><li>Chroma</li><li>OpenAI</li></ul>
+        <span class="pc-link">Read case study <span class="arrow">→</span></span>
+      </a>
+
+      <a class="project-card" href="projects/prompt-bench.html" data-tags="ai">
+        <span class="pc-year">2025 · Eval · Tooling</span>
+        <h3>prompt-bench</h3>
+        <p class="pc-summary">A small evaluation harness for comparing prompt variants. Scores each on accuracy, cost, and p95 latency across a fixed test set and renders a report I can share with non-engineers. Used at my internship.</p>
+        <ul class="pc-stack"><li>Python</li><li>Pytest</li><li>SQLite</li><li>Streamlit</li></ul>
+        <span class="pc-link">Read case study <span class="arrow">→</span></span>
+      </a>
+
+      <a class="project-card" href="projects/neural-from-scratch.html" data-tags="ai learning">
+        <span class="pc-year">2025 · Learning</span>
+        <h3>neural-from-scratch</h3>
+        <p class="pc-summary">A tiny neural network library in pure NumPy — forward pass, backprop, optimizers, and a working MNIST trainer. I built it to demystify what PyTorch is doing under the hood.</p>
+        <ul class="pc-stack"><li>NumPy</li><li>Jupyter</li><li>Matplotlib</li></ul>
+        <span class="pc-link">Read case study <span class="arrow">→</span></span>
+      </a>
+
+      <a class="project-card" href="projects/shelf.html" data-tags="web">
+        <span class="pc-year">2024 · Production</span>
+        <h3>shelf — bookkeeping for solo founders</h3>
+        <p class="pc-summary">A Django app for a freelance client — invoices, expenses, month-end dashboard. In production for two years, used daily. The project that taught me how messy real-world data actually is.</p>
+        <ul class="pc-stack"><li>Django</li><li>PostgreSQL</li><li>HTMX</li><li>Tailwind</li></ul>
+        <span class="pc-link">Read case study <span class="arrow">→</span></span>
+      </a>
+
+      <a class="project-card" href="projects/kothi.html" data-tags="wp">
+        <span class="pc-year">2023 · Client work</span>
+        <h3>kothi — boutique hotel theme</h3>
+        <p class="pc-summary">Custom WordPress theme + booking plugin for a chain of boutique hotels in Nepal. 100kb above-the-fold budget, Lighthouse 98+ on mobile. Still live, still earning the client revenue.</p>
+        <ul class="pc-stack"><li>PHP</li><li>WordPress</li><li>ACF</li><li>Custom Gutenberg blocks</li></ul>
+        <span class="pc-link">Read case study <span class="arrow">→</span></span>
+      </a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>manish<span style="color:var(--accent)">/</span>karki</h4>
+        <p>Web developer turned AI engineer. Currently in Kathmandu, available worldwide.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Pages</h5>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="lab.html">Lab</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Elsewhere</h5>
+        <ul>
+          <li><a href="https://github.com/manishkarki" target="_blank" rel="noopener">GitHub ↗</a></li>
+          <li><a href="https://linkedin.com/in/manishkarki" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+          <li><a href="https://x.com/manishkarki" target="_blank" rel="noopener">X / Twitter ↗</a></li>
+          <li><a href="mailto:hello@manishkarki.dev">Email</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Tools</h5>
+        <ul>
+          <li><a href="#" onclick="window.__openCmdk?.();return false;">Command palette ⌘K</a></li>
+          <li><a href="#" onclick="document.querySelector('.theme-toggle')?.click();return false;">Toggle theme</a></li>
+          <li><a href="#">Résumé / CV</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Manish Karki. Built from scratch, no frameworks.</span>
+      <span>Crafted in Kathmandu · hosted on Cloudflare</span>
+    </div>
+  </footer>
+
+  <script>const ROOT = "";</script>
+  <script src="assets/js/app.js" defer></script>
+</body>
+</html>
