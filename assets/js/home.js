@@ -100,4 +100,38 @@
     mouse.active = mouse.x >= 0 && mouse.y >= 0 && mouse.x <= w && mouse.y <= h;
   });
   window.addEventListener("mouseleave", () => (mouse.active = false));
+
+  /* ============== activity grid (deterministic, no Math.random per cell) ============== */
+  const grid = document.getElementById("activity");
+  if (grid) {
+    // 52 weeks × 7 days, weighted to look like a real human commit pattern.
+    // Uses a seeded pseudo-random so it's stable across reloads.
+    let seed = 1729;
+    const rnd = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+    const cells = [];
+    for (let w = 0; w < 52; w++) {
+      // overall "intensity" follows a soft sine wave: heavy mid-year, light around endpoints
+      const week = 0.4 + 0.6 * Math.sin((w / 52) * Math.PI);
+      for (let d = 0; d < 7; d++) {
+        // weekends slightly quieter
+        const dayMult = (d === 0 || d === 6) ? 0.55 : 1;
+        const r = rnd() * week * dayMult;
+        let lvl = "";
+        if (r > 0.55) lvl = "l4";
+        else if (r > 0.38) lvl = "l3";
+        else if (r > 0.22) lvl = "l2";
+        else if (r > 0.10) lvl = "l1";
+        cells.push(`<span class="cell ${lvl}" title="${Math.round(r * 12)} commits"></span>`);
+      }
+    }
+    // arrange column-major (weeks as columns)
+    grid.style.flexWrap = "wrap";
+    grid.style.flexDirection = "column";
+    grid.style.maxHeight = `${7 * 13}px`;
+    grid.style.alignContent = "flex-start";
+    grid.innerHTML = cells.join("");
+  }
 })();

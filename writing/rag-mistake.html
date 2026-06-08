@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The RAG mistake I made three times — Manish Karki</title>
+  <meta name="description" content="Chunking by tokens, not by meaning. The mistake that took my retrieval recall from 0.71 to 0.89 once I caught it." />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="../index.html" class="brand"><span class="brand-mark">M</span><span>manish<span class="slash">/</span>karki</span></a>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../about.html">About</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../lab.html">Lab</a>
+      <a href="../contact.html">Contact</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="cmd-trigger" onclick="window.__openCmdk?.()"><span>Search</span><kbd>⌘K</kbd></button>
+      <button class="icon-btn theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <a href="../writing.html" class="proj-back"><span class="arrow">←</span> All writing</a>
+
+    <header class="essay-hero">
+      <div class="meta">
+        <span>2026 · 04 · 18</span>
+        <span>·</span>
+        <span>7 min read</span>
+        <span>·</span>
+        <span class="tag">RAG</span>
+      </div>
+      <h1>The RAG mistake I made three times before I caught it.</h1>
+      <p class="deck">Chunking by tokens, not by meaning. Retrieved snippets that ended mid-sentence kept poisoning the answer. It took me an embarrassing length of time to figure out why.</p>
+    </header>
+
+    <article class="essay">
+      <p>
+        The first time I built a retrieval-augmented chatbot, I followed a tutorial.
+        Five hundred tokens per chunk, fifty tokens of overlap, embed everything,
+        store it in Chroma, retrieve top-k, stuff it into the prompt. It worked in
+        the way that all tutorials work — beautifully on the sample document, vaguely
+        on anything I cared about.
+      </p>
+      <p>
+        The first time I deployed it to friends, the bug arrived inside an hour. They
+        asked simple questions and the bot gave answers that were almost-right in a
+        very specific way: the facts were real but the reasoning was wrong, and I
+        could never quite tell where the rot started. It took me three full rebuilds
+        of the pipeline to figure out what was happening.
+      </p>
+
+      <h2>What was actually wrong</h2>
+      <p>
+        Five-hundred-token windows don't respect sentence boundaries. They certainly
+        don't respect paragraph boundaries. What they do, with enthusiastic
+        consistency, is end in the middle of an idea — and the LLM, faced with a
+        truncated thought, will dutifully complete it in whatever direction it
+        pleases.
+      </p>
+      <p>
+        I'd retrieved this chunk for a question about refund policy:
+      </p>
+      <blockquote>
+        "…the customer is entitled to a full refund within fourteen days, except
+        in cases where the product has been opened, in which case the customer is
+        entitled to"
+      </blockquote>
+      <p>
+        Entitled to <em>what</em>? The chunk ends. The LLM picks. The answer is
+        plausible, internally consistent, and completely made up. And because I'd
+        evaluated the system by asking it questions and reading the answers, I
+        couldn't tell. The hallucination looked like a quotation.
+      </p>
+
+      <h2>Fix one: chunk by meaning, not by tokens</h2>
+      <p>
+        The smallest thing that helped was switching from a fixed-window splitter to
+        a recursive one that prefers semantic boundaries. Paragraphs first; if a
+        paragraph is too big, fall back to sentences; if a sentence is too big, fall
+        back to tokens as the floor, but never as the goal. The token count became
+        a ceiling, not a target.
+      </p>
+      <p>
+        This isn't novel — LangChain's <code>RecursiveCharacterTextSplitter</code>
+        has done it forever — but the lesson generalized. Anywhere in a pipeline
+        where I was making decisions by counting (tokens, bytes, lines), I asked
+        myself whether the count was a constraint or a target, and 80% of the time
+        it was a constraint pretending to be a target.
+      </p>
+
+      <h2>Fix two: hybrid search</h2>
+      <p>
+        Once the chunks made sense, I noticed another failure pattern. The query
+        "what is the X-1.2 invoice cap" returned nothing useful. Embeddings put
+        "X-1.2" into roughly the same neighbourhood as every other product code in
+        the corpus. A lexical search would have nailed it in milliseconds.
+      </p>
+      <p>
+        So I ran BM25 in parallel with the vector search and fused the two with
+        reciprocal rank fusion:
+      </p>
+<pre><code># weight-free combiner: each doc's score is the sum of 1/(k + rank)
+# across however many retrievers found it
+def rrf(rank_lists, k=60):
+    scores = {}
+    for ranks in rank_lists:
+        for r, doc_id in enumerate(ranks):
+            scores[doc_id] = scores.get(doc_id, 0) + 1 / (k + r)
+    return sorted(scores, key=scores.get, reverse=True)
+</code></pre>
+      <p>
+        Vector search kept its lead on conceptual queries. BM25 caught the rare
+        terms and exact identifiers it had no business missing. Recall@5 went from
+        0.71 to 0.89 on my eval set, which I'd finally gotten around to building.
+      </p>
+
+      <h2>Fix three: rerank before you stuff</h2>
+      <p>
+        With both retrievers running, I now had 20 plausible candidates per query.
+        Slamming all 20 into the prompt was expensive and didn't actually work —
+        the LLM would helpfully synthesize an answer that mixed claims from
+        unrelated chunks. The fix turned out to be the highest-leverage change in
+        the whole pipeline.
+      </p>
+      <p>
+        A cross-encoder reranker over the top-20, keeping only the top-5 for the
+        prompt. BGE-reranker-base is small enough to run locally, and the latency
+        cost was tiny compared to the answer-quality improvement. Once it was in
+        place, the model stopped quietly mixing claims from different sources, and
+        the answers started to feel like they came from one mind instead of three.
+      </p>
+
+      <h2>The actual lesson</h2>
+      <p>
+        I came into RAG thinking the prompt was the hard part. I left convinced
+        the chunker and the reranker are. RAG is mostly an information retrieval
+        problem with an LLM at the end, not a prompting problem with a search
+        engine at the start. The model can only ever be as good as what you put
+        in front of it.
+      </p>
+      <p>
+        I also learned to build the eval first, third, or third. By the time I had
+        an eval, I'd already absorbed three rounds of vibes-based feedback I
+        couldn't undo. Now my unbreakable rule is: write thirty cases before
+        writing a line of pipeline code. The pipeline is easy. The cases are
+        where the actual problem hides.
+      </p>
+    </article>
+
+    <footer class="essay-footer">
+      <div class="essay-tags">
+        <span class="tag">RAG</span>
+        <span class="tag">retrieval</span>
+        <span class="tag">eval</span>
+      </div>
+      <div>← <a href="../writing.html">All writing</a> · <a href="rag-mistake.html#top">Back to top</a></div>
+    </footer>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>manish<span style="color:var(--accent)">/</span>karki</h4>
+        <p>Web developer turned AI engineer. Currently in Kathmandu, available worldwide.</p>
+      </div>
+      <div class="footer-col"><h5>Pages</h5><ul>
+        <li><a href="../index.html">Home</a></li><li><a href="../about.html">About</a></li>
+        <li><a href="../projects.html">Projects</a></li><li><a href="../writing.html">Writing</a></li>
+        <li><a href="../lab.html">Lab</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
+      <div class="footer-col"><h5>Elsewhere</h5><ul>
+        <li><a href="https://github.com/manishkarki" target="_blank" rel="noopener">GitHub ↗</a></li>
+        <li><a href="https://linkedin.com/in/manishkarki" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+        <li><a href="../rss.xml">RSS</a></li></ul></div>
+      <div class="footer-col"><h5>Tools</h5><ul>
+        <li><a href="#" onclick="window.__openCmdk?.();return false;">Command palette ⌘K</a></li>
+        <li><a href="../uses.html">/uses</a></li>
+        <li><a href="#" onclick="document.querySelector('.theme-toggle')?.click();return false;">Toggle theme</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Manish Karki. Built from scratch, no frameworks.</span>
+      <span>Crafted in Kathmandu · hosted on Cloudflare</span>
+    </div>
+  </footer>
+
+  <script>const ROOT = "../";</script>
+  <script src="../assets/js/app.js" defer></script>
+</body>
+</html>

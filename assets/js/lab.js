@@ -405,4 +405,337 @@
       resizeTimer = setTimeout(draw, 150);
     });
   }
+
+  /* ─────────────────────────────────────────────
+     4) VECTOR SEARCH OVER THE PORTFOLIO
+     A tiny TF-IDF + cosine-similarity ranker
+     over a hand-built corpus of site content.
+     This is basically a mini-RAG retrieval step.
+     ───────────────────────────────────────────── */
+
+  const CORPUS = [
+    {
+      id: "docu-chat",
+      title: "docu-chat — RAG over PDFs and markdown",
+      url: ROOT + "projects/docu-chat.html",
+      kind: "project",
+      text: `A retrieval-augmented chatbot that answers questions over a folder of PDFs and markdown notes with citations. Built end-to-end to learn the full RAG loop: ingestion, chunking, embeddings, hybrid search BM25 vector, reranking with cross-encoder BGE, grounded answers with sources. FastAPI LangChain Chroma OpenAI. The three places I focused first: chunk by meaning not token count, hybrid search BM25 plus vector fused with reciprocal rank fusion, cross-encoder reranker over top 20 candidates.`
+    },
+    {
+      id: "prompt-bench",
+      title: "prompt-bench — evaluation harness for prompts",
+      url: ROOT + "projects/prompt-bench.html",
+      kind: "project",
+      text: `A small evaluation harness for comparing prompt variants. Scores each variant on accuracy cost and p95 latency across a fixed test set. Built during my internship and used daily. Python pytest sqlite streamlit. LLM-as-judge with rubric and 10 percent manual sample review. Versioning prompts and the judge prompt itself. The biggest accuracy wins came from changes I would never have made by gut feel.`
+    },
+    {
+      id: "neural-from-scratch",
+      title: "neural-from-scratch — tiny NN library in NumPy",
+      url: ROOT + "projects/neural-from-scratch.html",
+      kind: "project",
+      text: `A tiny neural network library in pure NumPy. Autograd Tensor with forward and backward closures. Layers linear relu sigmoid tanh softmax dropout batchnorm. Losses MSE cross-entropy. Optimizers SGD momentum Adam. MNIST trainer hits 97 percent test accuracy. 600 lines no dependencies except NumPy. Built to demystify PyTorch backprop. Numerical stability log softmax overflow.`
+    },
+    {
+      id: "shelf",
+      title: "shelf — Django bookkeeping app for solo founders",
+      url: ROOT + "projects/shelf.html",
+      kind: "project",
+      text: `A Django app for a freelance client. Invoices expenses recurring billings month-end dashboard. Two years in production used daily. Django 5 PostgreSQL HTMX Alpine Tailwind Caddy droplet. Money cannot be a float DecimalField. Timezones USE_TZ true. Soft delete instead of confirmation modal. Audit logging from day one.`
+    },
+    {
+      id: "kothi",
+      title: "kothi — WordPress theme for boutique hotels",
+      url: ROOT + "projects/kothi.html",
+      kind: "project",
+      text: `Custom WordPress theme and booking plugin for a chain of boutique hotels in Nepal. Performance budget 100kb above the fold mobile Lighthouse 98 plus. PHP WordPress ACF custom Gutenberg blocks vanilla JS CSS. AVIF WebP JPEG image pipeline. Direct bookings up 38 percent year over year after launch.`
+    },
+    {
+      id: "about",
+      title: "About Manish Karki",
+      url: ROOT + "about.html",
+      kind: "page",
+      text: `Web developer turned AI engineering intern. Started in WordPress at 18 in Pokhara Nepal. Three years building sites for hotels hospitals shops. Pivoted to Python with Flask Django scrapers dashboards. Late 2023 saw the AI wave and never looked back. Now interning at an AI company learning to ship LLM features in production. Not a researcher will not publish papers. Five years of getting software to real users. Based in Kathmandu.`
+    },
+    {
+      id: "principles",
+      title: "How I work — principles",
+      url: ROOT + "about.html",
+      kind: "page",
+      text: `Boring tools interesting problems. Make the feedback loop tight. Read the source. Ship to one real user. Eval everything LLM. Be kind to the next person. Build the eval before the prompt. Without a test set you are not iterating you are rearranging deck chairs.`
+    },
+    {
+      id: "skills",
+      title: "Stack and tools",
+      url: ROOT + "about.html",
+      kind: "page",
+      text: `Python PyTorch LangChain LlamaIndex Hugging Face OpenAI Anthropic API RAG vector databases Chroma pgvector prompt evaluation Flask Django FastAPI Node React Tailwind PostgreSQL REST PHP WordPress ACF Docker Linux Cloudflare GitHub Actions Cursor Claude Code Neovim tmux zsh macOS Arch Linux.`
+    },
+    {
+      id: "essay-rag-mistake",
+      title: "The RAG mistake I made three times",
+      url: ROOT + "writing/rag-mistake.html",
+      kind: "essay",
+      text: `Chunking by tokens not by meaning. Recursive splitter that prefers paragraphs then sentences then tokens. Hybrid search BM25 plus vector with reciprocal rank fusion. Cross-encoder reranker over top 20 candidates. Recall went from 0.71 to 0.89 on the eval set. Build the eval first not third.`
+    },
+    {
+      id: "essay-wordpress",
+      title: "WordPress was an apprenticeship",
+      url: ROOT + "writing/wordpress-apprenticeship.html",
+      kind: "essay",
+      text: `Five years of WordPress sites taught me more about shipping software than any framework since. Non-technical authors caching gotchas plugin compatibility decade-old admin patterns. A working site that earns money beats a beautiful repo. Real users do not read modals. The undo button beats the warning dialog.`
+    },
+    {
+      id: "essay-eval",
+      title: "Eval-driven prompting",
+      url: ROOT + "writing/eval-driven-prompting.html",
+      kind: "essay",
+      text: `Eval-driven prompting changed my life. Without a test set you are not iterating you are rearranging deck chairs. 30 to 100 fixed cases with categories. Accuracy cost p95 latency. LLM as judge with rubric sample 10 percent manually. Version the judge prompt. Per category breakdowns to catch regressions hidden by aggregate score.`
+    },
+    {
+      id: "contact",
+      title: "Contact and availability",
+      url: ROOT + "contact.html",
+      kind: "page",
+      text: `Open to AI engineering roles junior associate or a meaty internship. Remote hybrid or relocation. Email hello at manishkarki dot dev. GitHub manishkarki. LinkedIn in manishkarki. Based in Kathmandu Nepal GMT plus 5 45. Looking for teams shipping LLM-backed features to real users not just prototypes.`
+    },
+  ];
+
+  // Build TF-IDF index
+  const STOPWORDS = new Set("a an the and or but if then so to of in on at by for with as is are was were be been being have has had do does did will would could should may might can not no this that these those it its from".split(" "));
+  const tok = (s) =>
+    s.toLowerCase()
+      .replace(/[^\w\s]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w && !STOPWORDS.has(w) && w.length > 1);
+
+  const docTerms = CORPUS.map((d) => tok(d.text + " " + d.title));
+  const df = {};
+  docTerms.forEach((terms) => {
+    new Set(terms).forEach((t) => (df[t] = (df[t] || 0) + 1));
+  });
+  const N = CORPUS.length;
+  const idf = (t) => Math.log((1 + N) / (1 + (df[t] || 0))) + 1;
+
+  const tfidfVec = (terms) => {
+    const tf = {};
+    terms.forEach((t) => (tf[t] = (tf[t] || 0) + 1));
+    const v = {};
+    Object.entries(tf).forEach(([t, c]) => {
+      v[t] = (c / terms.length) * idf(t);
+    });
+    return v;
+  };
+
+  const docVecs = docTerms.map(tfidfVec);
+
+  const cosine = (a, b) => {
+    let dot = 0, na = 0, nb = 0;
+    for (const [t, av] of Object.entries(a)) {
+      na += av * av;
+      if (b[t]) dot += av * b[t];
+    }
+    for (const bv of Object.values(b)) nb += bv * bv;
+    return dot && na && nb ? dot / (Math.sqrt(na) * Math.sqrt(nb)) : 0;
+  };
+
+  const search = (q, k = 5) => {
+    const qTerms = tok(q);
+    if (!qTerms.length) return [];
+    const qVec = tfidfVec(qTerms);
+    const matchedTerms = new Set(qTerms);
+    return CORPUS.map((d, i) => ({
+      doc: d,
+      score: cosine(qVec, docVecs[i]),
+      matched: docTerms[i].filter((t) => matchedTerms.has(t)),
+    }))
+      .filter((r) => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, k);
+  };
+
+  const snippet = (text, qTerms, max = 180) => {
+    const lower = text.toLowerCase();
+    let bestIdx = 0;
+    for (const t of qTerms) {
+      const i = lower.indexOf(t);
+      if (i >= 0) { bestIdx = Math.max(0, i - 40); break; }
+    }
+    let s = text.slice(bestIdx, bestIdx + max);
+    if (bestIdx > 0) s = "… " + s;
+    if (bestIdx + max < text.length) s = s + " …";
+    // bold the query terms
+    qTerms.forEach((t) => {
+      if (t.length < 2) return;
+      const re = new RegExp(`\\b(${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+      s = s.replace(re, "<mark>$1</mark>");
+    });
+    return s;
+  };
+
+  const KIND_LABELS = { project: "project", essay: "essay", page: "page" };
+
+  const vsInput = $("#vs-input");
+  const vsResults = $("#vs-results");
+  const vsStats = $("#vs-stats");
+  const renderSearch = () => {
+    if (!vsInput || !vsResults) return;
+    const q = vsInput.value.trim();
+    if (!q) {
+      vsResults.innerHTML = `<div class="vs-empty">Try <em>"how to evaluate prompts"</em>, <em>"hybrid search"</em>, or <em>"WordPress"</em>.</div>`;
+      vsStats.textContent = `${CORPUS.length} documents indexed`;
+      return;
+    }
+    const start = performance.now();
+    const results = search(q, 5);
+    const elapsed = (performance.now() - start).toFixed(1);
+    if (!results.length) {
+      vsResults.innerHTML = `<div class="vs-empty">No results — try different words. The corpus is small (${CORPUS.length} documents).</div>`;
+      vsStats.textContent = `0 results · ${elapsed}ms`;
+      return;
+    }
+    const qTerms = tok(q);
+    vsResults.innerHTML = results
+      .map(
+        (r) => `
+        <a class="vs-result" href="${r.doc.url}">
+          <div class="vs-result-head">
+            <span class="vs-kind vs-kind-${r.doc.kind}">${KIND_LABELS[r.doc.kind] || r.doc.kind}</span>
+            <span class="vs-title">${r.doc.title}</span>
+            <span class="vs-score">${(r.score * 100).toFixed(1)}</span>
+          </div>
+          <div class="vs-snippet">${snippet(r.doc.text, qTerms)}</div>
+        </a>
+      `
+      )
+      .join("");
+    vsStats.textContent = `${results.length} results · ${elapsed}ms · ${CORPUS.length} docs indexed`;
+  };
+  if (vsInput) {
+    vsInput.addEventListener("input", renderSearch);
+    renderSearch();
+    $$(".vs-suggestion").forEach((b) =>
+      b.addEventListener("click", () => {
+        vsInput.value = b.textContent.replace(/^["“]|["”]$/g, "");
+        renderSearch();
+        vsInput.focus();
+      })
+    );
+  }
+
+  /* ─────────────────────────────────────────────
+     5) ATTENTION HEATMAP
+     A canned but plausible multi-head attention
+     visualizer. Hover over a token, see what
+     it attends to in the chosen head.
+     ───────────────────────────────────────────── */
+
+  const ATT_SENTENCE = ["The", "model", "reads", "every", "token", "and", "decides", "what", "matters"];
+  const N_T = ATT_SENTENCE.length;
+
+  // Generate plausible per-head patterns:
+  //  head 0: identity-ish (self-attention)
+  //  head 1: previous-token bias
+  //  head 2: subject ↔ verb bias (positions 1,2)
+  //  head 3: long-range, last token attends globally
+  const buildHead = (kind) => {
+    const m = Array.from({ length: N_T }, () => Array(N_T).fill(0));
+    for (let i = 0; i < N_T; i++) {
+      for (let j = 0; j <= i; j++) {
+        // causal mask
+        let s = 0;
+        if (kind === 0) s = i === j ? 4 : 0.1;
+        else if (kind === 1) s = j === i - 1 ? 3 : (i === j ? 1 : 0.1);
+        else if (kind === 2) {
+          // subject-verb-ish: tokens 1 ("model") and 2 ("reads") strongly attend to each other
+          if ((i === 2 && j === 1) || (i === 1 && j === 1)) s = 3.5;
+          else if (j === i) s = 1;
+          else s = 0.2 + 0.3 * Math.exp(-Math.abs(i - j) / 2);
+        } else {
+          // long-range: last token attends globally; others local
+          if (i === N_T - 1) s = 1 + Math.sin(j * 1.3) * 0.6 + 0.8;
+          else s = j === i ? 1.5 : Math.max(0, 0.5 - Math.abs(i - j) * 0.15);
+        }
+        m[i][j] = Math.exp(s);
+      }
+      // softmax over the row (over j <= i)
+      const sum = m[i].reduce((a, b) => a + b, 0);
+      if (sum > 0) for (let j = 0; j < N_T; j++) m[i][j] /= sum;
+    }
+    return m;
+  };
+  const HEADS = [0, 1, 2, 3].map(buildHead);
+
+  const attRow = $("#att-row");
+  const attHeads = $("#att-heads");
+  const attHint = $("#att-hint");
+  if (attRow && attHeads) {
+    let currentHead = 0;
+    let hoverIdx = N_T - 1;
+
+    const renderTokens = () => {
+      attRow.innerHTML = ATT_SENTENCE.map(
+        (t, i) =>
+          `<button class="att-tok" data-i="${i}" aria-label="Token ${t}">${t}</button>`
+      ).join("");
+    };
+
+    const colorFor = (w) => {
+      // w in [0, 1] → background opacity
+      const alpha = Math.min(0.85, 0.05 + w * 1.1);
+      return `rgba(52, 211, 153, ${alpha})`;
+    };
+
+    const highlight = (rowIdx) => {
+      hoverIdx = rowIdx;
+      const m = HEADS[currentHead];
+      const row = m[rowIdx];
+      const max = Math.max(...row);
+      attRow.querySelectorAll(".att-tok").forEach((el, j) => {
+        const norm = max > 0 ? row[j] / max : 0;
+        const blocked = j > rowIdx; // causal mask
+        el.style.background = blocked ? "transparent" : colorFor(norm);
+        el.style.borderColor = j === rowIdx ? "var(--accent)" : (blocked ? "var(--border)" : "transparent");
+        el.style.opacity = blocked ? "0.3" : "1";
+        el.style.color = norm > 0.6 ? "#0a0d12" : "var(--text)";
+      });
+      const top3 = row
+        .map((w, j) => ({ w, j }))
+        .filter((x) => x.j <= rowIdx)
+        .sort((a, b) => b.w - a.w)
+        .slice(0, 3)
+        .map((x) => `${ATT_SENTENCE[x.j]} <span style="color:var(--text-mute)">(${(x.w * 100).toFixed(0)}%)</span>`)
+        .join(", ");
+      attHint.innerHTML = `Token <strong style="color:var(--accent)">"${ATT_SENTENCE[rowIdx]}"</strong> attends to: ${top3}`;
+    };
+
+    const renderHeads = () => {
+      attHeads.innerHTML = ["self", "previous", "subj↔verb", "long-range"]
+        .map(
+          (label, i) =>
+            `<button class="att-head ${i === currentHead ? "active" : ""}" data-h="${i}">head ${i}<span class="hl">${label}</span></button>`
+        )
+        .join("");
+    };
+
+    renderTokens();
+    renderHeads();
+    highlight(hoverIdx);
+
+    attRow.addEventListener("mouseover", (e) => {
+      const b = e.target.closest(".att-tok");
+      if (b) highlight(+b.dataset.i);
+    });
+    attRow.addEventListener("click", (e) => {
+      const b = e.target.closest(".att-tok");
+      if (b) highlight(+b.dataset.i);
+    });
+    attHeads.addEventListener("click", (e) => {
+      const b = e.target.closest(".att-head");
+      if (b) {
+        currentHead = +b.dataset.h;
+        renderHeads();
+        highlight(hoverIdx);
+      }
+    });
+  }
 })();

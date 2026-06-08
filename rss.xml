@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Manish Karki — writing</title>
+    <link>https://manishkarki.dev/writing.html</link>
+    <atom:link href="https://manishkarki.dev/rss.xml" rel="self" type="application/rss+xml" />
+    <description>Essays on AI engineering, RAG, evals, and the small craft of shipping software.</description>
+    <language>en</language>
+
+    <item>
+      <title>The RAG mistake I made three times before I caught it</title>
+      <link>https://manishkarki.dev/writing/rag-mistake.html</link>
+      <guid isPermaLink="true">https://manishkarki.dev/writing/rag-mistake.html</guid>
+      <pubDate>Sat, 18 Apr 2026 09:00:00 +0545</pubDate>
+      <description>Chunking by tokens, not by meaning. Retrieved snippets that ended mid-sentence kept poisoning the answer. Three fixes that took retrieval recall from 0.71 to 0.89.</description>
+    </item>
+
+    <item>
+      <title>WordPress was an apprenticeship in software</title>
+      <link>https://manishkarki.dev/writing/wordpress-apprenticeship.html</link>
+      <guid isPermaLink="true">https://manishkarki.dev/writing/wordpress-apprenticeship.html</guid>
+      <pubDate>Mon, 02 Mar 2026 09:00:00 +0545</pubDate>
+      <description>Five years of WordPress sites for non-technical clients taught me more about shipping software than any framework has since. A reluctant defence of the most unfashionable platform on the internet.</description>
+    </item>
+
+    <item>
+      <title>Eval-driven prompting, or: how I stopped vibe-coding LLMs</title>
+      <link>https://manishkarki.dev/writing/eval-driven-prompting.html</link>
+      <guid isPermaLink="true">https://manishkarki.dev/writing/eval-driven-prompting.html</guid>
+      <pubDate>Mon, 09 Feb 2026 09:00:00 +0545</pubDate>
+      <description>Without a test set, you're not iterating on a prompt — you're rearranging deck chairs. A small case for taking prompt evaluation as seriously as unit testing.</description>
+    </item>
+  </channel>
+</rss>

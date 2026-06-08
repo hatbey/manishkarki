@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Eval-driven prompting — Manish Karki</title>
+  <meta name="description" content="Without a test set, you're not iterating on a prompt — you're rearranging deck chairs. A case for taking prompt evals as seriously as unit tests." />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="../index.html" class="brand"><span class="brand-mark">M</span><span>manish<span class="slash">/</span>karki</span></a>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../about.html">About</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../lab.html">Lab</a>
+      <a href="../contact.html">Contact</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="cmd-trigger" onclick="window.__openCmdk?.()"><span>Search</span><kbd>⌘K</kbd></button>
+      <button class="icon-btn theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <a href="../writing.html" class="proj-back"><span class="arrow">←</span> All writing</a>
+
+    <header class="essay-hero">
+      <div class="meta">
+        <span>2026 · 02 · 09</span>
+        <span>·</span>
+        <span>8 min read</span>
+        <span>·</span>
+        <span class="tag">Eval</span>
+      </div>
+      <h1>Eval-driven prompting,<br />or: how I stopped vibe-coding LLMs.</h1>
+      <p class="deck">Without a test set, you're not iterating on a prompt — you're rearranging deck chairs. A small case for taking prompt evaluation as seriously as you'd take unit testing.</p>
+    </header>
+
+    <article class="essay">
+      <p>
+        For most of my first year working with LLMs, I shipped prompt changes the
+        same way I'd shipped HTML changes in the early days: I'd write a thing,
+        squint at the output, decide it looked better, and commit. There were no
+        tests, because what would the tests even look like. There were no metrics,
+        because the output was prose. There were arguments on the team about
+        whether the new version was better, because everyone had different
+        examples in their head.
+      </p>
+      <p>
+        We were vibe-coding. It worked until it didn't. About six months in I
+        watched us roll back three prompt changes in a single week, each one
+        having broken something that a different person had only just fixed. We'd
+        been improving the same prompt against three different mental models of
+        what "improvement" meant. It was, I came to understand, not a prompt
+        problem. It was an epistemics problem. We didn't know what good looked
+        like.
+      </p>
+
+      <h2>The thing nobody tells you</h2>
+      <p>
+        The thing nobody tells you when you start working with LLMs is how much of
+        the work is not about the model. It is about deciding, in advance and in
+        writing, what "good" means — clearly enough that two people can grade the
+        same output and agree. The model is the easy part. Knowing what to ask of
+        it is the hard part.
+      </p>
+      <p>
+        A prompt evaluation is, at its smallest, a list of inputs and the answers
+        you wanted. That's it. You run the prompt against each input, you grade
+        the answer against what you wanted, and you have a number. The number
+        isn't the truth — no number is the truth — but it is a coordinate. Two
+        coordinates make a direction. And a direction is what you need.
+      </p>
+
+      <blockquote>
+        Without a test set, you're not iterating on a prompt — you're rearranging deck chairs.
+      </blockquote>
+
+      <h2>What the eval set looks like</h2>
+      <p>
+        Mine is a YAML file. Thirty to a hundred cases, depending on the project.
+        Each case has an input, an expected output (or a rubric, for open-ended
+        questions), and a tag or two for categorization. Boring. Stable. Lives
+        in version control next to the code.
+      </p>
+<pre><code># cases.yaml
+- id: refund_explicit
+  input: |
+    Customer wrote: "I changed my mind, I want my money back."
+  expect:
+    intent: refund_request
+  tags: [refund, easy]
+
+- id: refund_implicit
+  input: |
+    Customer wrote: "I'd rather not have this anymore, can we work
+    something out?"
+  expect:
+    intent: refund_request
+  tags: [refund, hard]
+</code></pre>
+      <p>
+        Two things matter more than they look like they do. <strong>Tags</strong> —
+        because almost every regression I've ever caught has been a category
+        regression that the aggregate score hid. <strong>Hard cases mixed with
+        easy ones</strong> — because if your eval set is all easy cases, every
+        variant will look fine.
+      </p>
+
+      <h2>How to grade open-ended outputs</h2>
+      <p>
+        For deterministic cases — intent classification, structured extraction,
+        anything you can express as equality or a regex — the grader writes
+        itself. For open-ended outputs (summaries, customer-facing replies,
+        explanations), I use an LLM-as-judge with a rubric, and I sample ten
+        percent for manual review.
+      </p>
+      <p>
+        This sounds dirty and it is dirty, but it works if you treat the judge
+        prompt itself as part of the system under test. Version it. Run your
+        candidate variant against your locked-in judge from last week, not
+        against a judge prompt you also just edited. Otherwise — and I learned
+        this the hard way — half of your "improvements" will turn out to be the
+        judge being more lenient.
+      </p>
+
+      <h2>Track three numbers, not one</h2>
+      <p>
+        For every variant I run, I keep three numbers per case:
+      </p>
+      <ul>
+        <li><strong>Accuracy.</strong> Did the answer match the rubric?</li>
+        <li><strong>Cost.</strong> Input tokens × input price + output tokens × output price.</li>
+        <li><strong>Latency.</strong> p95, not mean. Mean hides the long tail that breaks user trust.</li>
+      </ul>
+      <p>
+        The biggest accuracy wins in my career so far have come from changes I
+        would never have made on gut feel. The clearest example: I replaced
+        <em>"be concise"</em> with <em>"answer in at most two sentences"</em> in a
+        customer-service prompt. Accuracy dropped four points because the model
+        started cutting itself off mid-reasoning. We would never have caught that
+        without the eval.
+      </p>
+      <p>
+        Cost is the number I underestimated longest. One refactor of a context
+        builder saved 60% of input tokens with no accuracy loss. Without putting
+        dollar signs next to each variant, that change would have looked
+        equivalent. With them, it was an obvious yes.
+      </p>
+
+      <h2>What it changes about the team</h2>
+      <p>
+        The least technical thing I want to say in this essay is the most
+        important. Once we had numbers, the social dynamics of the team
+        changed. Arguments about prompts stopped being arguments about taste —
+        which never end — and started being arguments about which case the model
+        was failing on, and why. Those arguments are much shorter, and much more
+        useful.
+      </p>
+      <p>
+        We stopped having weekly fights about whether the new prompt was better.
+        We started having weekly meetings about whether the eval set was still
+        representative. Both are productive conversations. Only the second one
+        ends with a smaller backlog.
+      </p>
+
+      <h2>What I'd tell past me</h2>
+      <ol>
+        <li>Build the eval before the prompt. Always. The eval is the spec.</li>
+        <li>Write thirty cases before you ship anything. Then twenty more.</li>
+        <li>Tag every case. You'll thank yourself the first time aggregate goes up and one category quietly tanks.</li>
+        <li>Version your judge prompt. Drift is silent and expensive.</li>
+        <li>p95 latency, not mean. The long tail is where the user gives up.</li>
+        <li>Track cost in dollars, not tokens. Tokens lie about what you're spending.</li>
+      </ol>
+      <p>
+        None of this is exciting. None of this is the part of AI that gets you
+        invited to give a talk. But every team I've watched ship LLM features
+        that actually work, when I've gone looking, has a boring spreadsheet of
+        cases somewhere in their repo. The boring spreadsheet is the work. The
+        prompt is the easy bit. Build the spreadsheet first.
+      </p>
+    </article>
+
+    <footer class="essay-footer">
+      <div class="essay-tags">
+        <span class="tag">eval</span>
+        <span class="tag">prompts</span>
+        <span class="tag">methodology</span>
+      </div>
+      <div>← <a href="../writing.html">All writing</a> · <a href="eval-driven-prompting.html#top">Back to top</a></div>
+    </footer>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>manish<span style="color:var(--accent)">/</span>karki</h4>
+        <p>Web developer turned AI engineer. Currently in Kathmandu, available worldwide.</p>
+      </div>
+      <div class="footer-col"><h5>Pages</h5><ul>
+        <li><a href="../index.html">Home</a></li><li><a href="../about.html">About</a></li>
+        <li><a href="../projects.html">Projects</a></li><li><a href="../writing.html">Writing</a></li>
+        <li><a href="../lab.html">Lab</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
+      <div class="footer-col"><h5>Elsewhere</h5><ul>
+        <li><a href="https://github.com/manishkarki" target="_blank" rel="noopener">GitHub ↗</a></li>
+        <li><a href="https://linkedin.com/in/manishkarki" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+        <li><a href="../rss.xml">RSS</a></li></ul></div>
+      <div class="footer-col"><h5>Tools</h5><ul>
+        <li><a href="#" onclick="window.__openCmdk?.();return false;">Command palette ⌘K</a></li>
+        <li><a href="../uses.html">/uses</a></li>
+        <li><a href="#" onclick="document.querySelector('.theme-toggle')?.click();return false;">Toggle theme</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Manish Karki. Built from scratch, no frameworks.</span>
+      <span>Crafted in Kathmandu · hosted on Cloudflare</span>
+    </div>
+  </footer>
+
+  <script>const ROOT = "../";</script>
+  <script src="../assets/js/app.js" defer></script>
+</body>
+</html>

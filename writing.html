@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Writing — Manish Karki</title>
+  <meta name="description" content="Essays on AI engineering, RAG, evals, and what WordPress taught me about shipping software." />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="alternate" type="application/rss+xml" title="manishkarki.dev writing" href="rss.xml" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="index.html" class="brand" aria-label="Home">
+      <span class="brand-mark">M</span>
+      <span>manish<span class="slash">/</span>karki</span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="projects.html">Projects</a>
+      <a href="writing.html" class="active">Writing</a>
+      <a href="lab.html">Lab</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="cmd-trigger" onclick="window.__openCmdk?.()" aria-label="Open command palette">
+        <span>Search</span><kbd>⌘K</kbd>
+      </button>
+      <button class="icon-btn theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <header class="page-hero">
+      <span class="eyebrow">/writing</span>
+      <h1>Notes on what<br />I'm learning.</h1>
+      <p class="lede">Essays I write when I want to understand something better. Mostly about AI engineering and the small craft of shipping software. I publish here irregularly — when I have something useful to say.</p>
+    </header>
+
+    <div class="writing-grid">
+      <a class="write-card" href="writing/rag-mistake.html">
+        <div class="wc-date">2026 · 04 · 18</div>
+        <div>
+          <div class="wc-title">The RAG mistake I made three times before I caught it</div>
+          <div class="wc-summary">Chunking by tokens, not by meaning. Retrieved snippets that ended mid-sentence kept poisoning the answer. Here's what I learned, and the three fixes that took my retrieval recall from 0.71 to 0.89.</div>
+        </div>
+        <div class="wc-meta">
+          7 min read<br>
+          <span style="color:var(--accent)">essay →</span>
+        </div>
+      </a>
+
+      <a class="write-card" href="writing/wordpress-apprenticeship.html">
+        <div class="wc-date">2026 · 03 · 02</div>
+        <div>
+          <div class="wc-title">WordPress was an apprenticeship in software</div>
+          <div class="wc-summary">Five years of building WordPress sites for non-technical clients taught me more about shipping software than any framework has since. A reluctant defence of the most unfashionable platform on the internet.</div>
+        </div>
+        <div class="wc-meta">
+          6 min read<br>
+          <span style="color:var(--accent)">essay →</span>
+        </div>
+      </a>
+
+      <a class="write-card" href="writing/eval-driven-prompting.html">
+        <div class="wc-date">2026 · 02 · 09</div>
+        <div>
+          <div class="wc-title">Eval-driven prompting, or: how I stopped vibe-coding LLMs</div>
+          <div class="wc-summary">Without a test set, you're not iterating on a prompt — you're rearranging deck chairs. A small case for taking prompt evaluation as seriously as you'd take unit testing.</div>
+        </div>
+        <div class="wc-meta">
+          8 min read<br>
+          <span style="color:var(--accent)">essay →</span>
+        </div>
+      </a>
+    </div>
+
+    <section class="section" style="padding-bottom: 60px;">
+      <div class="cta-block" style="padding: 40px 32px;">
+        <span class="eyebrow">Subscribe</span>
+        <h2 style="font-size: clamp(22px, 3vw, 32px);">Get new essays when I publish them.</h2>
+        <p>No tracking, no marketing, just the writing. There's an <a href="rss.xml" style="color:var(--accent)">RSS feed</a> if you prefer a reader, or email me if you'd like to hear from me when I publish.</p>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <a class="btn btn-primary" href="rss.xml">RSS feed <span class="arrow">↗</span></a>
+          <a class="btn btn-ghost" href="mailto:hello@manishkarki.dev?subject=subscribe">Email me</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>manish<span style="color:var(--accent)">/</span>karki</h4>
+        <p>Web developer turned AI engineer. Currently in Kathmandu, available worldwide.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Pages</h5>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="projects.html">Projects</a></li>
+          <li><a href="writing.html">Writing</a></li>
+          <li><a href="lab.html">Lab</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Elsewhere</h5>
+        <ul>
+          <li><a href="https://github.com/manishkarki" target="_blank" rel="noopener">GitHub ↗</a></li>
+          <li><a href="https://linkedin.com/in/manishkarki" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+          <li><a href="https://x.com/manishkarki" target="_blank" rel="noopener">X / Twitter ↗</a></li>
+          <li><a href="rss.xml">RSS</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>Tools</h5>
+        <ul>
+          <li><a href="#" onclick="window.__openCmdk?.();return false;">Command palette ⌘K</a></li>
+          <li><a href="uses.html">/uses</a></li>
+          <li><a href="#" onclick="document.querySelector('.theme-toggle')?.click();return false;">Toggle theme</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Manish Karki. Built from scratch, no frameworks.</span>
+      <span>Crafted in Kathmandu · hosted on Cloudflare</span>
+    </div>
+  </footer>
+
+  <script>const ROOT = "";</script>
+  <script src="assets/js/app.js" defer></script>
+</body>
+</html>

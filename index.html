@@ -16,6 +16,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/styles.css" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+  <link rel="alternate" type="application/rss+xml" title="manishkarki.dev writing" href="rss.xml" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Manish Karki",
+    "url": "https://manishkarki.dev",
+    "jobTitle": "AI Engineering Intern",
+    "description": "Web developer turned AI engineer, building production LLM systems.",
+    "address": { "@type": "PostalAddress", "addressLocality": "Kathmandu", "addressCountry": "NP" },
+    "knowsAbout": ["Artificial Intelligence", "Large Language Models", "RAG", "Python", "Django", "WordPress"],
+    "sameAs": [
+      "https://github.com/manishkarki",
+      "https://linkedin.com/in/manishkarki",
+      "https://x.com/manishkarki"
+    ]
+  }
+  </script>
 </head>
 <body>
   <div class="bg-grid" aria-hidden="true"></div>
@@ -31,6 +49,7 @@
       <a href="index.html" class="active">Home</a>
       <a href="about.html">About</a>
       <a href="projects.html">Projects</a>
+      <a href="writing.html">Writing</a>
       <a href="lab.html">Lab</a>
       <a href="contact.html">Contact</a>
     </nav>
@@ -53,7 +72,7 @@
       <canvas class="home-hero-canvas" aria-hidden="true"></canvas>
       <div class="home-hero-inner">
         <span class="pill"><span class="dot"></span> Available for AI engineering roles · 2026</span>
-        <h1>
+        <h1 class="kinetic">
           <span class="line">Web developer.</span>
           <span class="line">Now a <span class="role-rotator"><span>AI engineer.</span></span><span class="cursor-blink"></span></span>
         </h1>
@@ -69,7 +88,7 @@
         <div class="home-stats">
           <div>
             <div class="stat-k">Based in</div>
-            <div class="stat-v">Kathmandu, NP</div>
+            <div class="stat-v"><span data-live-clock>Kathmandu, NP</span></div>
           </div>
           <div>
             <div class="stat-k">Currently</div>
@@ -84,6 +103,63 @@
             <div class="stat-v">Remote · Hybrid · Relocation</div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span class="marquee-item"><span class="dot"></span>Python</span>
+        <span class="marquee-item dim">PyTorch</span>
+        <span class="marquee-item"><span class="dot"></span>LangChain</span>
+        <span class="marquee-item dim">FastAPI</span>
+        <span class="marquee-item"><span class="dot"></span>RAG</span>
+        <span class="marquee-item dim">Hugging Face</span>
+        <span class="marquee-item"><span class="dot"></span>Django</span>
+        <span class="marquee-item dim">React</span>
+        <span class="marquee-item"><span class="dot"></span>PostgreSQL</span>
+        <span class="marquee-item dim">Docker</span>
+        <span class="marquee-item"><span class="dot"></span>Cloudflare</span>
+        <span class="marquee-item dim">WordPress</span>
+        <span class="marquee-item"><span class="dot"></span>NumPy</span>
+        <span class="marquee-item dim">Streamlit</span>
+        <span class="marquee-item"><span class="dot"></span>Linux</span>
+      </div>
+    </div>
+
+    <section class="section" id="numbers">
+      <div class="section-head">
+        <div class="section-head-left">
+          <span class="section-num">/numbers</span>
+          <h2>Five years, in numbers</h2>
+        </div>
+      </div>
+      <div class="bigstats">
+        <div class="bigstat">
+          <span class="countup" data-count="34" data-suffix="+"></span>
+          <div class="label">Sites &amp; apps shipped</div>
+          <span class="sublabel">WordPress · Django · Flask · FastAPI</span>
+        </div>
+        <div class="bigstat">
+          <span class="countup" data-count="97.1" data-suffix="%" data-decimals="1"></span>
+          <div class="label">MNIST accuracy</div>
+          <span class="sublabel">from my numpy-only NN</span>
+        </div>
+        <div class="bigstat">
+          <span class="countup" data-count="98" data-suffix=""></span>
+          <div class="label">Mobile Lighthouse</div>
+          <span class="sublabel">on the boutique-hotel theme</span>
+        </div>
+        <div class="bigstat">
+          <span class="countup" data-count="0" data-suffix=""></span>
+          <div class="label">Frameworks on this site</div>
+          <span class="sublabel">vanilla HTML / CSS / JS</span>
+        </div>
+      </div>
+
+      <div class="activity" id="activity" aria-label="Commit-style activity grid"></div>
+      <div class="activity-label">
+        <span>52 weeks · simulated, but the cadence is roughly right</span>
+        <span class="activity-legend">less <span class="cell"></span><span class="cell l1"></span><span class="cell l2"></span><span class="cell l3"></span><span class="cell l4"></span> more</span>
       </div>
     </section>
 

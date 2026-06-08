@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WordPress was an apprenticeship — Manish Karki</title>
+  <meta name="description" content="A reluctant defence of the most unfashionable platform on the internet — and what five years of building inside it taught me about shipping." />
+  <meta name="theme-color" content="#0a0d12" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0d12'/%3E%3Ctext x='50%25' y='56%25' text-anchor='middle' font-family='Space Grotesk,sans-serif' font-size='34' font-weight='700' fill='%2334d399'%3EM%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <header class="nav">
+    <a href="../index.html" class="brand"><span class="brand-mark">M</span><span>manish<span class="slash">/</span>karki</span></a>
+    <nav class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="../about.html">About</a>
+      <a href="../projects.html">Projects</a>
+      <a href="../writing.html" class="active">Writing</a>
+      <a href="../lab.html">Lab</a>
+      <a href="../contact.html">Contact</a>
+    </nav>
+    <div class="nav-tools">
+      <button class="cmd-trigger" onclick="window.__openCmdk?.()"><span>Search</span><kbd>⌘K</kbd></button>
+      <button class="icon-btn theme-toggle" aria-label="Toggle theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="icon-btn nav-burger" aria-label="Menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <a href="../writing.html" class="proj-back"><span class="arrow">←</span> All writing</a>
+
+    <header class="essay-hero">
+      <div class="meta">
+        <span>2026 · 03 · 02</span>
+        <span>·</span>
+        <span>6 min read</span>
+        <span>·</span>
+        <span class="tag warm">Craft</span>
+      </div>
+      <h1>WordPress was an apprenticeship.</h1>
+      <p class="deck">Five years of building WordPress sites for non-technical clients taught me more about shipping software than any framework has since. A reluctant defence of the most unfashionable platform on the internet.</p>
+    </header>
+
+    <article class="essay">
+      <p>
+        Nobody puts <em>WordPress developer</em> on their LinkedIn anymore. I almost
+        didn't, on mine. There is a quiet pressure inside our industry to graduate
+        out of it as soon as possible, as if it were a chore one performed in
+        adolescence and is now embarrassed to remember. I want to push back on
+        that, gently, because I think we lose something specific when we do.
+      </p>
+      <p>
+        I shipped my first paying website at eighteen, on a borrowed laptop, for a
+        trekking company in Pokhara. I shipped my last WordPress site at twenty-three,
+        a multilingual booking platform for a chain of boutique hotels. In between
+        were thirty more — small businesses, hotels, hospitals, one publisher who
+        wanted his Gutenberg editor to behave like InDesign. None of them are on my
+        portfolio in the way a side project is on a portfolio. All of them taught
+        me something I haven't learned from anywhere since.
+      </p>
+
+      <h2>The first thing was: the user is the point.</h2>
+      <p>
+        In WordPress, the user is rarely the person you're impressing on Hacker
+        News. The user is a hotel owner who edits the homepage from a phone, a
+        receptionist who needs to update room rates at 11pm, a marketing person who
+        wants to publish a blog post without filing a ticket. The user is not
+        technically sophisticated and has no patience for your cleverness. If you
+        ship something the user cannot operate, you have shipped nothing.
+      </p>
+      <p>
+        This is, I now realize, a useful constraint to internalize before you ever
+        touch a system that has more than three users and a Slack channel. It
+        ruined me for the brittle product cultures that show up later in a career —
+        the ones where the spec is the truth and the user is a customer-success
+        problem. I never quite shook the suspicion that those cultures are wrong.
+      </p>
+
+      <h2>The second thing was: caching is everything, and nothing is cached.</h2>
+      <p>
+        I cannot count the hours I spent in the early years not understanding why
+        my change wasn't appearing. Some piece of infrastructure was always
+        lying to me — the browser, the CDN, the WordPress object cache, the OPCache,
+        the page-builder preview, the hosting provider's mystery layer. The fix was
+        almost never the change I'd just made. The fix was finding which lie was
+        the loudest.
+      </p>
+      <p>
+        That habit — assume nothing, verify everything, and don't trust a single
+        layer's "I have the latest" — carried over to every system I have touched
+        since. When something doesn't work and you can't see why, the answer is
+        almost always that the thing you think is happening isn't.
+      </p>
+
+      <h2>The third thing was: ship the boring path.</h2>
+      <p>
+        WordPress imposes a discipline almost no modern frontend stack does: you
+        cannot make every decision from scratch. The admin patterns are fixed.
+        The plugin ecosystem expects certain shapes. The hosting environment has
+        opinions. There is a way things are done, and the further you stray from
+        it, the more pain you will eat over the next ten years of maintenance.
+      </p>
+      <blockquote>
+        A working site that earns money beats a beautiful repo that doesn't, every time.
+      </blockquote>
+      <p>
+        Building inside someone else's constraints — instead of choosing your own
+        from a menu of frameworks — is a skill you can lose if you only ever work
+        on greenfield projects. WordPress kept me honest about the difference
+        between necessary and indulgent novelty. When I now reach for a new tool
+        on a real project, I ask the same question I learned to ask in the
+        WordPress years: <em>does this earn its keep?</em>
+      </p>
+
+      <h2>The fourth thing was: users don't read modals.</h2>
+      <p>
+        One of my clients accidentally deleted an invoice on day four of using a
+        Django app I'd built for her. I had a confirmation modal. She had clicked
+        through it without reading. That night I added a soft-delete system, and in
+        the two years since, the modal has prevented zero accidents and the
+        soft-delete has saved her about a dozen times.
+      </p>
+      <p>
+        I learned this rule in the WordPress years — every confirmation dialog you
+        add is a tax that the careful user pays and the careless user evades — and
+        it has held up everywhere. The right answer is almost never the warning
+        dialog. It is the undo button. (LLM products take note.)
+      </p>
+
+      <h2>The fifth thing was: the boring tools win.</h2>
+      <p>
+        WordPress is unfashionable, but it is also forty percent of the web. PHP is
+        unfashionable, but it ships. jQuery is the punchline of half the Twitter
+        threads I read, and is also probably running on the website of the company
+        currently rejecting my CV. Boring tools have inertia for a reason. They
+        have been worn smooth by use.
+      </p>
+      <p>
+        I'm now interning in AI, where the temptation to reach for the newest thing
+        is constant and the cost of being wrong is real. I keep myself honest with
+        a small mantra borrowed from those WordPress years: <em>boring tools,
+        interesting problems.</em> Spend your novelty budget on the part of the
+        system where novelty is actually the answer. Everywhere else, ship the
+        boring path.
+      </p>
+
+      <h2>If you'll let me get sentimental for a second</h2>
+      <p>
+        The WordPress years were not the years anyone congratulated me on. They
+        were the years I learned the parts of the job that no bootcamp teaches —
+        how to talk to a client, how to bill, how to stop a site from going down on
+        a Sunday morning, how to admit when something is broken because of you, and
+        how to fix it before the client notices. None of that is in a CV bullet
+        point. All of it is what makes the next ten years of work possible.
+      </p>
+      <p>
+        I'm still glad I started where I did. If you're starting now and you're
+        embarrassed by where you are — don't be. The unfashionable beginning is
+        sometimes the one that teaches you the right things.
+      </p>
+    </article>
+
+    <footer class="essay-footer">
+      <div class="essay-tags">
+        <span class="tag warm">craft</span>
+        <span class="tag warm">career</span>
+        <span class="tag warm">WordPress</span>
+      </div>
+      <div>← <a href="../writing.html">All writing</a> · <a href="wordpress-apprenticeship.html#top">Back to top</a></div>
+    </footer>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <h4>manish<span style="color:var(--accent)">/</span>karki</h4>
+        <p>Web developer turned AI engineer. Currently in Kathmandu, available worldwide.</p>
+      </div>
+      <div class="footer-col"><h5>Pages</h5><ul>
+        <li><a href="../index.html">Home</a></li><li><a href="../about.html">About</a></li>
+        <li><a href="../projects.html">Projects</a></li><li><a href="../writing.html">Writing</a></li>
+        <li><a href="../lab.html">Lab</a></li><li><a href="../contact.html">Contact</a></li></ul></div>
+      <div class="footer-col"><h5>Elsewhere</h5><ul>
+        <li><a href="https://github.com/manishkarki" target="_blank" rel="noopener">GitHub ↗</a></li>
+        <li><a href="https://linkedin.com/in/manishkarki" target="_blank" rel="noopener">LinkedIn ↗</a></li>
+        <li><a href="../rss.xml">RSS</a></li></ul></div>
+      <div class="footer-col"><h5>Tools</h5><ul>
+        <li><a href="#" onclick="window.__openCmdk?.();return false;">Command palette ⌘K</a></li>
+        <li><a href="../uses.html">/uses</a></li>
+        <li><a href="#" onclick="document.querySelector('.theme-toggle')?.click();return false;">Toggle theme</a></li></ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span data-year></span> Manish Karki. Built from scratch, no frameworks.</span>
+      <span>Crafted in Kathmandu · hosted on Cloudflare</span>
+    </div>
+  </footer>
+
+  <script>const ROOT = "../";</script>
+  <script src="../assets/js/app.js" defer></script>
+</body>
+</html>

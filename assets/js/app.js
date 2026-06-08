@@ -129,8 +129,10 @@
     { group: "navigate", icon: "home", label: "Home",          href: ROOT + "index.html",    keywords: "start landing" },
     { group: "navigate", icon: "user", label: "About",         href: ROOT + "about.html",    keywords: "story bio" },
     { group: "navigate", icon: "grid", label: "Projects",      href: ROOT + "projects.html", keywords: "work portfolio case" },
+    { group: "navigate", icon: "doc",  label: "Writing",       href: ROOT + "writing.html",  keywords: "essays blog notes" },
     { group: "navigate", icon: "lab",  label: "Lab",           href: ROOT + "lab.html",      keywords: "playground demo interactive ai" },
     { group: "navigate", icon: "mail", label: "Contact",       href: ROOT + "contact.html",  keywords: "hire email" },
+    { group: "navigate", icon: "box",  label: "Uses",          href: ROOT + "uses.html",     keywords: "setup hardware software tools" },
 
     { group: "projects", icon: "box", label: "docu-chat",            href: ROOT + "projects/docu-chat.html",            keywords: "rag retrieval llm" },
     { group: "projects", icon: "box", label: "prompt-bench",         href: ROOT + "projects/prompt-bench.html",         keywords: "eval evaluation harness" },
@@ -138,10 +140,16 @@
     { group: "projects", icon: "box", label: "kothi",                href: ROOT + "projects/kothi.html",                keywords: "wordpress hotel theme" },
     { group: "projects", icon: "box", label: "neural-from-scratch",  href: ROOT + "projects/neural-from-scratch.html",  keywords: "numpy backprop ml" },
 
+    { group: "essays",   icon: "doc", label: "The RAG mistake I made three times",       href: ROOT + "writing/rag-mistake.html",            keywords: "chunking retrieval" },
+    { group: "essays",   icon: "doc", label: "WordPress was an apprenticeship",          href: ROOT + "writing/wordpress-apprenticeship.html", keywords: "career craft" },
+    { group: "essays",   icon: "doc", label: "Eval-driven prompting",                    href: ROOT + "writing/eval-driven-prompting.html",  keywords: "evaluation prompts methodology" },
+
     { group: "actions",  icon: "theme",  label: "Toggle theme",          action: toggleTheme,                                       meta: "T",  keywords: "dark light mode" },
+    { group: "actions",  icon: "search", label: "Keyboard shortcuts",    action: () => window.__openHelp && window.__openHelp(),    meta: "?",  keywords: "help kbd shortcuts" },
     { group: "actions",  icon: "github", label: "GitHub profile",        href: "https://github.com/manishkarki",                    meta: "↗",  keywords: "code" },
     { group: "actions",  icon: "mail",   label: "Email me",              href: "mailto:hello@manishkarki.dev",                      meta: "↗",  keywords: "contact" },
     { group: "actions",  icon: "doc",    label: "Download résumé",       href: "#",                                                 meta: "↗",  keywords: "cv resume" },
+    { group: "actions",  icon: "theme",  label: "Throw confetti",        action: () => window.__confetti && window.__confetti(40),  meta: "!",  keywords: "celebrate party" },
   ];
 
   const ICONS = {
@@ -398,4 +406,345 @@
       });
     });
   }
+
+  // ============== custom cursor ==============
+  const hasFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (hasFinePointer && !reduceMotion) {
+    const dot = document.createElement("div");
+    const ring = document.createElement("div");
+    dot.className = "cursor-dot cursor-hidden";
+    ring.className = "cursor-ring cursor-hidden";
+    document.body.appendChild(dot);
+    document.body.appendChild(ring);
+    document.body.classList.add("has-cursor-fx");
+
+    // mouse position (updated every mousemove)
+    let mx = -100, my = -100;
+    // ring follow position (lerped)
+    let rx = -100, ry = -100;
+    // smoothed velocity for ring stretch
+    let vx = 0, vy = 0;
+    let lastSampleT = 0, lastSampleX = -100, lastSampleY = -100;
+
+    const RING_LERP = 0.32; // higher = snappier
+
+    const onMove = (e) => {
+      mx = e.clientX;
+      my = e.clientY;
+      // dot is glued to cursor — no lerp, no easing
+      dot.style.transform = `translate3d(${mx}px, ${my}px, 0)`;
+      if (dot.classList.contains("cursor-hidden")) {
+        dot.classList.remove("cursor-hidden");
+        ring.classList.remove("cursor-hidden");
+        rx = mx; ry = my;
+        lastSampleX = mx; lastSampleY = my;
+      }
+    };
+    document.addEventListener("mousemove", onMove, { passive: true });
+    document.addEventListener("mouseleave", () => {
+      dot.classList.add("cursor-hidden");
+      ring.classList.add("cursor-hidden");
+    });
+    document.addEventListener("mouseenter", () => {
+      if (mx >= 0) {
+        dot.classList.remove("cursor-hidden");
+        ring.classList.remove("cursor-hidden");
+      }
+    });
+
+    // click → contract both + spawn a ripple at click point
+    document.addEventListener("mousedown", (e) => {
+      ring.classList.add("clicking");
+      dot.classList.add("clicking");
+      // ripple
+      const r = document.createElement("div");
+      r.className = "cursor-ripple";
+      r.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      document.body.appendChild(r);
+      setTimeout(() => r.remove(), 620);
+    });
+    document.addEventListener("mouseup", () => {
+      ring.classList.remove("clicking");
+      dot.classList.remove("clicking");
+    });
+
+    // ring trails the dot, with velocity-based skew when moving fast
+    const trail = (t) => {
+      rx += (mx - rx) * RING_LERP;
+      ry += (my - ry) * RING_LERP;
+
+      // sample velocity every ~16ms
+      if (t - lastSampleT > 16) {
+        const ivx = (mx - lastSampleX) * 0.5;
+        const ivy = (my - lastSampleY) * 0.5;
+        vx = vx * 0.7 + ivx * 0.3;
+        vy = vy * 0.7 + ivy * 0.3;
+        lastSampleX = mx;
+        lastSampleY = my;
+        lastSampleT = t;
+      }
+
+      // skew based on velocity, clamped — disabled when hovering or clicking
+      const isHovering = ring.classList.contains("hovering");
+      const isClicking = ring.classList.contains("clicking");
+      let skewX = 0, skewY = 0;
+      if (!isHovering && !isClicking) {
+        const speed = Math.min(28, Math.hypot(vx, vy));
+        const f = speed * 0.6;
+        skewX = Math.max(-12, Math.min(12, vx * 0.2));
+        skewY = Math.max(-12, Math.min(12, vy * 0.2));
+        // additionally stretch in direction of motion
+        ring.style.borderColor = `color-mix(in srgb, var(--accent) ${Math.round(55 + f * 1.5)}%, transparent)`;
+      } else {
+        ring.style.borderColor = "";
+      }
+
+      ring.style.transform = `translate3d(${rx}px, ${ry}px, 0) skew(${skewX}deg, ${skewY}deg)`;
+      requestAnimationFrame(trail);
+    };
+    requestAnimationFrame(trail);
+
+    // hover state
+    const interactiveSel = "a, button, [role='button'], input, textarea, select, .att-tok, .embed-canvas, .chat-suggestion, .vs-suggestion, .role-rotator, .filter-chip, .vs-result, label";
+    const setHover = (yes) => {
+      ring.classList.toggle("hovering", yes);
+      dot.classList.toggle("hovering", yes);
+    };
+    document.addEventListener("mouseover", (e) => {
+      setHover(!!e.target.closest(interactiveSel));
+    });
+    document.addEventListener("mouseout", (e) => {
+      if (!e.relatedTarget || !e.relatedTarget.closest?.(interactiveSel)) {
+        // only clear when leaving toward something non-interactive
+        if (!e.target.closest(interactiveSel)) setHover(false);
+      }
+    });
+  }
+
+  // ============== spotlight on cards ==============
+  const spotlightTargets = $$(".project-card, .lab-card, .note-card, .write-card, .principle, .contact-method, .uses-block, .now-block, .vs-result, .cta-block, .skill-col");
+  spotlightTargets.forEach((el) => {
+    el.classList.add("spotlight");
+    el.addEventListener("mousemove", (e) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty("--mx", `${e.clientX - r.left}px`);
+      el.style.setProperty("--my", `${e.clientY - r.top}px`);
+    });
+  });
+
+  // ============== kinetic hero (split into words) ==============
+  const kinetic = $(".kinetic");
+  if (kinetic && !reduceMotion) {
+    const splitNode = (node, baseDelay) => {
+      let delay = baseDelay;
+      node.childNodes.forEach((child) => {
+        if (child.nodeType === Node.TEXT_NODE) {
+          const words = child.textContent.split(/(\s+)/);
+          const frag = document.createDocumentFragment();
+          words.forEach((w) => {
+            if (!w.trim()) { frag.appendChild(document.createTextNode(w)); return; }
+            const mask = document.createElement("span");
+            mask.className = "kinetic-mask";
+            const span = document.createElement("span");
+            span.className = "word";
+            span.style.animationDelay = `${delay}ms`;
+            span.textContent = w;
+            mask.appendChild(span);
+            frag.appendChild(mask);
+            delay += 80;
+          });
+          child.parentNode.replaceChild(frag, child);
+        } else if (child.nodeType === Node.ELEMENT_NODE && !child.classList.contains("role-rotator") && !child.classList.contains("cursor-blink")) {
+          delay = splitNode(child, delay);
+        }
+      });
+      return delay;
+    };
+    splitNode(kinetic, 100);
+  }
+
+  // ============== count-up numbers ==============
+  const countTargets = $$(".countup, [data-count]");
+  const animateCount = (el, to, opts = {}) => {
+    const duration = opts.duration || 1400;
+    const decimals = opts.decimals || 0;
+    const prefix = opts.prefix || "";
+    const suffix = opts.suffix || "";
+    const start = performance.now();
+    const from = 0;
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      // ease-out cubic
+      const e = 1 - Math.pow(1 - t, 3);
+      const val = from + (to - from) * e;
+      el.textContent = prefix + val.toFixed(decimals) + suffix;
+      if (t < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  };
+
+  if ("IntersectionObserver" in window) {
+    const countIO = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const el = e.target;
+            const to = parseFloat(el.dataset.count);
+            const decimals = parseInt(el.dataset.decimals || "0", 10);
+            const prefix = el.dataset.prefix || "";
+            const suffix = el.dataset.suffix || "";
+            animateCount(el, to, { decimals, prefix, suffix });
+            countIO.unobserve(el);
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+    countTargets.forEach((el) => countIO.observe(el));
+  } else {
+    countTargets.forEach((el) => {
+      el.textContent = (el.dataset.prefix || "") + el.dataset.count + (el.dataset.suffix || "");
+    });
+  }
+
+  // ============== live Kathmandu clock ==============
+  const clock = $("[data-live-clock]");
+  if (clock) {
+    const update = () => {
+      const now = new Date();
+      // Convert to GMT+5:45 (Kathmandu) by computing offset
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const ktm = new Date(utc + (5 * 60 + 45) * 60000);
+      const h = ktm.getHours().toString().padStart(2, "0");
+      const m = ktm.getMinutes().toString().padStart(2, "0");
+      const s = ktm.getSeconds().toString().padStart(2, "0");
+      const greeting = h < 5 ? "asleep" : h < 12 ? "good morning" : h < 17 ? "good afternoon" : h < 21 ? "good evening" : "late night";
+      clock.innerHTML = `<span class="live-dot" aria-hidden="true"></span>It's <strong>${h}:${m}:${s}</strong> in Kathmandu — ${greeting}`;
+    };
+    update();
+    setInterval(update, 1000);
+  }
+
+  // ============== scroll-driven hero parallax ==============
+  const hero = $(".home-hero");
+  if (hero && !reduceMotion) {
+    const onScrollHero = () => {
+      hero.style.setProperty("--scroll-y", window.scrollY);
+    };
+    onScrollHero();
+    window.addEventListener("scroll", onScrollHero, { passive: true });
+  }
+
+  // ============== help modal (?) ==============
+  const helpHtml = `
+    <div class="help-modal" id="help-modal" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+      <h3>Keyboard shortcuts <button onclick="document.getElementById('help-modal').classList.remove('open');document.querySelector('.cmdk-backdrop')?.classList.remove('open');document.body.style.overflow='';">esc</button></h3>
+      <h4>Navigation</h4>
+      <div class="help-list">
+        <div class="row"><span>Open command palette</span><span class="keys"><kbd>⌘</kbd><kbd>K</kbd></span></div>
+        <div class="row"><span>Toggle theme</span><span class="keys"><kbd>T</kbd></span></div>
+        <div class="row"><span>Show this help</span><span class="keys"><kbd>?</kbd></span></div>
+        <div class="row"><span>Close any modal</span><span class="keys"><kbd>Esc</kbd></span></div>
+      </div>
+      <h4>Inside the palette</h4>
+      <div class="help-list">
+        <div class="row"><span>Move selection</span><span class="keys"><kbd>↑</kbd><kbd>↓</kbd></span></div>
+        <div class="row"><span>Select item</span><span class="keys"><kbd>↵</kbd></span></div>
+        <div class="row"><span>Vim-style nav</span><span class="keys"><kbd>Ctrl</kbd><kbd>P</kbd>/<kbd>N</kbd></span></div>
+      </div>
+      <h4>Surprises</h4>
+      <div class="help-list">
+        <div class="row"><span>Konami code</span><span class="keys"><kbd>↑↑↓↓←→←→BA</kbd></span></div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML("beforeend", helpHtml);
+  const helpModal = $("#help-modal");
+  const openHelp = () => {
+    $(".cmdk-backdrop")?.classList.add("open");
+    helpModal.classList.add("open");
+  };
+  const closeHelp = () => {
+    helpModal.classList.remove("open");
+    if (!dialog.classList.contains("open")) $(".cmdk-backdrop")?.classList.remove("open");
+  };
+  window.__openHelp = openHelp;
+
+  document.addEventListener("keydown", (e) => {
+    const inField = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName) ||
+                    document.activeElement?.isContentEditable;
+    if (!inField && e.key === "?" && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      helpModal.classList.contains("open") ? closeHelp() : openHelp();
+    }
+    if (e.key === "Escape" && helpModal.classList.contains("open")) {
+      closeHelp();
+    }
+  });
+  $(".cmdk-backdrop")?.addEventListener("click", () => {
+    if (helpModal.classList.contains("open")) closeHelp();
+  });
+
+  // ============== konami easter egg ==============
+  const KONAMI = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","b","a"];
+  let konIdx = 0;
+  document.addEventListener("keydown", (e) => {
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (key === KONAMI[konIdx]) {
+      konIdx++;
+      if (konIdx === KONAMI.length) {
+        konIdx = 0;
+        triggerKonami();
+      }
+    } else {
+      konIdx = key === KONAMI[0] ? 1 : 0;
+    }
+  });
+  function triggerKonami() {
+    document.body.classList.toggle("rainbow");
+    burstConfetti(60);
+  }
+
+  // ============== confetti ==============
+  function burstConfetti(n = 30) {
+    const colors = ["#34d399", "#22d3ee", "#fbbf24", "#f472b6", "#a78bfa", "#fb923c"];
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement("div");
+      c.className = "confetti";
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.left = window.innerWidth / 2 + "px";
+      c.style.top = window.innerHeight / 2 + "px";
+      c.style.transform = `translate(-50%, -50%) rotate(${Math.random() * 360}deg)`;
+      document.body.appendChild(c);
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 200 + Math.random() * 400;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist - 60;
+      const rot = Math.random() * 720 - 360;
+      const duration = 1200 + Math.random() * 800;
+      const start = performance.now();
+      const tick = (now) => {
+        const t = Math.min(1, (now - start) / duration);
+        const e = 1 - Math.pow(1 - t, 2);
+        c.style.transform = `translate(calc(-50% + ${dx * e}px), calc(-50% + ${dy * e + 200 * t * t}px)) rotate(${rot * e}deg)`;
+        c.style.opacity = String(1 - t);
+        if (t < 1) requestAnimationFrame(tick);
+        else c.remove();
+      };
+      requestAnimationFrame(tick);
+    }
+  }
+  window.__confetti = burstConfetti;
+
+  // ============== role-rotator pop ==============
+  // tiny payoff: clicking the rotating role triggers confetti
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".role-rotator")) burstConfetti(20);
+  });
+
+  // ============== infinite marquee duplicator ==============
+  $$(".marquee-track").forEach((track) => {
+    track.innerHTML = track.innerHTML + track.innerHTML;
+  });
 })();

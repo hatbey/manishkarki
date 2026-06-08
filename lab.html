@@ -47,7 +47,7 @@
     <header class="page-hero">
       <span class="eyebrow">/lab</span>
       <h1>Small things,<br />running right here.</h1>
-      <p class="lede">Three interactive AI demos, all running in your browser. No API keys, no backend calls — these are tiny implementations of ideas I find interesting. Inspect the source if you'd like to see how they work.</p>
+      <p class="lede">Five interactive AI demos, all running entirely in your browser. No API keys, no backend calls — these are tiny implementations of ideas I find interesting. View source to see how each one works.</p>
     </header>
 
     <section class="section" style="padding-top: 20px;">
@@ -109,6 +109,42 @@
           <p class="embed-hint">→ Animals cluster top-left, programming languages top-right, ML/AI terms centre-right, food bottom-left, cities bottom-right. Where would <em>manishkarki</em> land?</p>
         </div>
 
+        <!-- DEMO 4: vector search over the portfolio -->
+        <div class="lab-card" style="grid-column: 1 / -1;">
+          <div class="lc-head">
+            <h3>vector search over this site</h3>
+            <span class="tag">interactive</span>
+          </div>
+          <p class="lc-desc">A working in-browser RAG retriever. TF-IDF over a hand-built corpus of 12 documents — projects, essays, pages — ranked by cosine similarity. Same machinery that powers production search, just at toy scale. Hit it with any query about my work.</p>
+
+          <div class="vs-search-bar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input class="vs-input" id="vs-input" type="text" placeholder="Try 'evaluating prompts' or 'RAG mistakes'…" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="vs-suggestions">
+            <button class="vs-suggestion">how to evaluate prompts</button>
+            <button class="vs-suggestion">hybrid search</button>
+            <button class="vs-suggestion">WordPress</button>
+            <button class="vs-suggestion">chunking strategy</button>
+            <button class="vs-suggestion">production Python</button>
+          </div>
+          <div class="vs-stats" id="vs-stats"></div>
+          <div class="vs-results" id="vs-results"></div>
+        </div>
+
+        <!-- DEMO 5: attention heatmap -->
+        <div class="lab-card" style="grid-column: 1 / -1;">
+          <div class="lc-head">
+            <h3>attention pattern visualizer</h3>
+            <span class="tag">interactive</span>
+          </div>
+          <p class="lc-desc">Multi-head self-attention, demystified. Each "head" learns to look at different things — the token before you, the subject of a sentence, the whole context. Pick a head, hover a token, see what it attends to. Patterns are hand-crafted to be plausible, not real model weights.</p>
+
+          <div class="att-heads" id="att-heads"></div>
+          <div class="att-row" id="att-row"></div>
+          <p class="att-hint" id="att-hint">Hover any token to see which earlier tokens it attends to under the current head.</p>
+        </div>
+
       </div>
     </section>
 
@@ -156,6 +192,7 @@
           <li><a href="index.html">Home</a></li>
           <li><a href="about.html">About</a></li>
           <li><a href="projects.html">Projects</a></li>
+          <li><a href="writing.html">Writing</a></li>
           <li><a href="lab.html">Lab</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
